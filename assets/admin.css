@@ -50,3 +50,11 @@
 .wvm-dashboard .wvm-rule-row span { font-size: 12px; color: #50575e; }
 .wvm-dashboard .wvm-rule-row button { flex: 0 0 auto; padding: 6px; cursor: pointer; }
 @media (max-width:782px) { .wvm-dashboard .wvm-rule-row select { flex-basis: 46%; max-width: none; } }
+
+.wvm-dashboard .wvm-categories { border: 1px solid #dcdcde; border-radius: 8px; padding: 12px; margin: 18px 0; max-height: 225px; overflow-y: auto; }
+.wvm-dashboard .wvm-categories legend { padding: 0 6px; }
+.wvm-dashboard .wvm-categories label { display: block; padding: 5px 2px; margin: 0; }
+.wvm-dashboard .wvm-stock-options { border: 1px solid #dcdcde; border-radius: 8px; padding: 14px; margin: 18px 0; }
+.wvm-dashboard .wvm-stock-options h3 { margin-top: 0; }
+.wvm-dashboard .wvm-stock-options input[type="number"] { max-width: 160px; width: 100%; }
+.wvm-dashboard textarea[name="wvm_product_desc"] { max-width: 100%; resize: vertical; }
