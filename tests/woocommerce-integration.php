@@ -71,7 +71,10 @@ try {
 
     $loaded = wc_get_product( $product_id );
     integration_assert( $loaded instanceof WC_Product_Simple, 'WooCommerce product CRUD load failed' );
-    integration_assert( $loaded->get_regular_price() === '329.90', 'Parent minimum price mismatch' );
+    integration_assert(
+        abs( (float) $loaded->get_regular_price() - 329.90 ) < 0.001,
+        'Parent minimum price mismatch: got ' . var_export( $loaded->get_regular_price(), true )
+    );
     $configuration = WVM_Products::configuration( $loaded );
     integration_assert( is_array( $configuration ), 'Configured product not readable' );
     integration_assert( count( $configuration['prices'] ) === 4, 'Price matrix not persisted' );
