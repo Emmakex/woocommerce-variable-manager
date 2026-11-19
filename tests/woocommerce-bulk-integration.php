@@ -137,10 +137,14 @@ try {
     rewind( $out );
     $csvExport = stream_get_contents( $out );
     fclose( $out );
-    assert_bulk( $written >= 7 && strpos( $csvExport, 'SYN-BULK-A-CI' ) !== false, 'export did not contain synthetic fixtures' );
+    assert_bulk(
+        $written >= 3 && strpos( $csvExport, 'SYN-BULK-B-CI' ) !== false &&
+        strpos( $csvExport, 'SYN-BULK-A-CI' ) === false,
+        'export must include managed SKUs and exclude protected WooCommerce sale products'
+    );
     // Fresh export imports with the same header/encoding.
     $exportRows = WVM_Bulk::parse_file( temporary_csv( $csvExport ) );
-    assert_bulk( is_array( $exportRows ) && count( $exportRows ) >= 7, 'export cannot be parsed back' );
+    assert_bulk( is_array( $exportRows ) && count( $exportRows ) >= 3, 'export cannot be parsed back' );
     echo "WooCommerce bulk integration PASS: dry-run, two products updated, selective pricing, stock/rules preserved, stale-plan guard, sale guard and CSV export.\n";
 } finally {
     foreach ( $created_products as $id ) {
