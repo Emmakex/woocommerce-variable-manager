@@ -15,6 +15,7 @@ final class WVM_Storefront {
 
     public static function init(): void {
         add_filter( 'woocommerce_is_purchasable', array( __CLASS__, 'purchasable' ), 10, 2 );
+        add_filter( 'woocommerce_get_price_html', array( __CLASS__, 'price_html' ), 10, 2 );
         add_action( 'woocommerce_before_add_to_cart_button', array( __CLASS__, 'render' ) );
         add_action( 'wp_enqueue_scripts', array( __CLASS__, 'assets' ) );
         add_filter( 'woocommerce_add_to_cart_validation', array( __CLASS__, 'validate_add' ), 10, 3 );
@@ -23,6 +24,19 @@ final class WVM_Storefront {
         add_filter( 'woocommerce_get_item_data', array( __CLASS__, 'display_cart' ), 10, 2 );
         add_action( 'woocommerce_checkout_create_order_line_item', array( __CLASS__, 'order_meta' ), 10, 4 );
         add_action( 'woocommerce_check_cart_items', array( __CLASS__, 'check_cart' ) );
+    }
+
+    public static function price_html( string $html, WC_Product $product ): string {
+        $config = WVM_Products::configuration( $product );
+        if ( ! $config ) {
+            return $html;
+        }
+        $minimum = WVM_Pricing::minimum( $config['prices'] );
+        return $minimum ? sprintf(
+            /* translators: %s is a WooCommerce formatted price. */
+            __( 'Desde %s', 'woocommerce-variable-manager' ),
+            wc_price( wc_get_price_to_display( $product, array( 'price' => (float) $minimum ) ) )
+        ) : $html;
     }
 
     public static function purchasable( bool $purchasable, WC_Product $product ): bool {
