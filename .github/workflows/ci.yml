@@ -104,6 +104,7 @@ jobs:
           wp eval-file "$GITHUB_WORKSPACE/tests/woocommerce-catalog-integration.php" --path="$WP_PATH"
           wp eval-file "$GITHUB_WORKSPACE/tests/woocommerce-quick-integration.php" --path="$WP_PATH"
           wp eval-file "$GITHUB_WORKSPACE/tests/woocommerce-checkout-integration.php" --path="$WP_PATH"
+          wp eval-file "$GITHUB_WORKSPACE/tests/woocommerce-product-edge-integration.php" --path="$WP_PATH"
           wp wvm demo preview --path="$WP_PATH"
           wp wvm demo seed --confirm-synthetic=YES --path="$WP_PATH"
           WVM_EXPECT_DEMO=8 wp eval-file "$GITHUB_WORKSPACE/tests/demo-audit.php" --path="$WP_PATH"
