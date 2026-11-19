@@ -197,17 +197,17 @@ final class WVM_Quick_Edit {
                 echo '</tbody>';
                 continue;
             }
-            if ( $editable ) {
-                echo '<input type="hidden" form="wvm-quick-form" name="wvm_fingerprint[' .
-                    esc_attr( (string) $product->get_id() ) . ']" value="' .
-                    esc_attr( WVM_Bulk::fingerprint( $product, $config ) ) . '">';
-            }
             $pos = 0;
             foreach ( $config['options']['size'] as $size ) {
                 echo '<tr>';
                 if ( 0 === $pos ) {
-                    echo '<th scope="rowgroup" rowspan="' . esc_attr( (string) $count ) . '"><strong>' .
-                        esc_html( $product->get_name() ) . '</strong>';
+                    echo '<th scope="rowgroup" rowspan="' . esc_attr( (string) $count ) . '">';
+                    if ( $editable ) {
+                        echo '<input type="hidden" name="wvm_fingerprint[' .
+                            esc_attr( (string) $product->get_id() ) . ']" value="' .
+                            esc_attr( WVM_Bulk::fingerprint( $product, $config ) ) . '">';
+                    }
+                    echo '<strong>' . esc_html( $product->get_name() ) . '</strong>';
                     echo '<span class="wvm-catalog-sku">' . esc_html( $product->get_sku() ?: 'Sin SKU' ) . '</span>';
                     echo '<a class="wvm-quick-open" href="' . esc_url( admin_url( 'admin.php?page=wvm-products&id=' . $product->get_id() ) ) .
                         '">Ver ficha</a>';
@@ -218,7 +218,7 @@ final class WVM_Quick_Edit {
                 }
                 $base = 'wvm_price[' . (int) $product->get_id() . '][' . $pos . ']';
                 echo '<td>' . esc_html( $size ) . '</td>';
-                echo '<td>' . esc_html( wc_price( (float) $config['prices'][ $size ] ) ) . '</td>';
+                echo '<td>' . esc_html( wc_format_localized_price( $config['prices'][ $size ] ) ) . '</td>';
                 echo '<td>';
                 if ( $editable ) {
                     echo '<input type="hidden" name="' . esc_attr( $base . '[size]' ) . '" value="' . esc_attr( $size ) . '">';
