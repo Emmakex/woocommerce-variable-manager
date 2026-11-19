@@ -1,6 +1,6 @@
 # WooCommerce Variable Manager
 
-**0.8.0-beta · © 2026 Eduardo Yauri**
+**0.9.0-beta · © 2026 Eduardo Yauri**
 
 See [LICENSE](LICENSE) for original-code rights. This public repository is used for CI and engineering; rights to WordPress, WooCommerce and other third-party components remain under their respective licenses.
 
@@ -64,7 +64,7 @@ No demo products are ever created on plugin activation, by the admin dashboard o
 
 ## Installing for staging
 
-Requires PHP 8.1+, WordPress and active WooCommerce. Download the `woocommerce-variable-manager-0.8.0-beta-staging` artifact from the successful GitHub Actions workflow. Extract the plugin ZIP and upload it from WordPress → Plugins.
+Requires PHP 8.1+, WordPress and active WooCommerce. Download the `woocommerce-variable-manager-0.9.0-beta-staging` artifact from the successful GitHub Actions workflow. Extract the plugin ZIP and upload it from WordPress → Plugins.
 
 Open **Variable Manager** in the WP admin sidebar. The shop's theme must render classic WooCommerce product hooks; checkout blocks / Store API are **not yet certified**. For `colchones.kairoseth.com` setup and acceptance checks, see [docs/STAGING.md](docs/STAGING.md).
 
@@ -93,15 +93,15 @@ The manager handles **simple products** that use a single parent SKU/stock pool.
 
 **Do not install this draft PR in production before staging acceptance.**
 
-## 0.8.0-beta — faster catalog management
+## 0.9.0-beta — faster catalog management
 
 A product can be located by **exact SKU**, even if its title contains no such text. Normal product-title searches remain available. The **Duplicar borrador** action on a managed product creates a second *draft, hidden, out-of-stock* product with a blank SKU; pricing matrices, compatible option rules, text, category/image references, basic dimensions and tax/shipping classification are retained. Unmanaged products and products whose configurations are stale cannot be duplicated. No order or stock is copied. The original stays untouched. Test before use on staging.
 
-## 0.8.0-beta — inline catalog price grid
+## 0.9.0-beta — inline catalog price grid
 
 Use **Variable Manager → Edición rápida** for everyday tariff corrections, without editing product fichas, exporting/importing CSV, or generating WooCommerce variations. Up to 10 managed simple products appear per page, with price inputs per size. The interface shows how many prices have changed, supports Spanish decimals, leaves sales discounted products in read-only mode, and validates all modified product matrices on the server. A concurrent change to the same product cancels the save rather than overwriting it. No pricing rules, inventory, SEO or customer orders are altered by the quick editor. **Save runs for a whole edited page; failed preflight rejects the batch.**
 
-## 0.8.0-beta — catalog filters and mobile-first price administration
+## 0.9.0-beta — catalog filters and mobile-first price administration
 
 - **Products & tariffs:** search by name or exact SKU, select published/draft/pending/private status, optionally show only products managed by Variable Manager. Filters are server-side WC product queries and persist across pagination.
 - **Quick edit:** the same status filter, with a manageable 10 products per page and a responsive **card layout on mobile** instead of requiring horizontal table scrolling.
@@ -109,3 +109,9 @@ Use **Variable Manager → Edición rápida** for everyday tariff corrections, w
 - **Verification:** WooCommerce integration covers managed-only searches, published/draft filtering, SKU filtering and existing price protections. A zero-dependency Node test covers change-count, decimal comma handling, undo, invalid prices and unsaved navigation warning.
 
 The filtering code does not write to WooCommerce; it affects catalog queries only. Site Architect, theme and production installations remain unchanged.
+
+## 0.9.0-beta — synthetic checkout acceptance gate
+
+The disposable GitHub CI environment now additionally creates a temporary **real WooCommerce pending order** via the classic checkout's line-item creation method, based on two separately configured cart lines of a fictional canopy bed. The test adds a real WooCommerce fixed-cart coupon (20 EUR), enables temporary Spanish base taxation (ES, 21%), verifies subtotal, VAT, coupon and total consistency, then persists the order. It verifies that every order line still carries the selected measure, color, thickness and opening, and that allocated line totals reflect the discount. Product, coupon, order, tax rate, templates and changed settings are removed in a cleanup block.
+
+**This is not a browser checkout or payment test.** It deliberately skips UI submissions, shipping method choice, gateway authorization/capture, fiscal edge cases and full HPOS production deployment. Those remain explicitly gated on staging acceptance. GitHub Actions never connects to a live store.
