@@ -26,3 +26,15 @@ jobs:
         run: |
           node --check assets/admin.js
           node --check assets/storefront.js
+      - name: Package staging installer
+        run: |
+          mkdir -p dist/woocommerce-variable-manager
+          cp -R includes assets woocommerce-variable-manager.php README.md LICENSE dist/woocommerce-variable-manager/
+          cd dist
+          zip -qr ../woocommerce-variable-manager-0.1.0.zip woocommerce-variable-manager
+      - name: Upload staging installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: woocommerce-variable-manager-0.1.0-staging
+          path: woocommerce-variable-manager-0.1.0.zip
+          retention-days: 7
