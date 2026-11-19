@@ -206,10 +206,19 @@ final class WVM_Dashboard {
         echo '<a class="button button-secondary" href="' . esc_url( self::url( 'wvm-products' ) ) . '">Nuevo producto</a></div>';
         $search = isset( $_GET['wvm_search'] ) && is_string( $_GET['wvm_search'] ) ? sanitize_text_field( wp_unslash( $_GET['wvm_search'] ) ) : '';
         $page = isset( $_GET['wvm_page'] ) ? max( 1, absint( $_GET['wvm_page'] ) ) : 1;
-        echo '<form class="wvm-search" method="get"><input type="hidden" name="page" value="wvm-products">';
-        echo '<label class="screen-reader-text" for="wvm_search">Buscar producto</label><input id="wvm_search" type="search" name="wvm_search" value="' . esc_attr( $search ) . '" placeholder="Buscar por nombre o SKU exacto">';
-        echo '<button class="button" type="submit">Buscar</button></form>';
-        $result = WVM_Catalog::search( $search, $page );
+        $status = isset( $_GET['wvm_status_filter'] ) && is_string( $_GET['wvm_status_filter'] )
+            ? WVM_Catalog::allowed_status( sanitize_key( wp_unslash( $_GET['wvm_status_filter'] ) ) ) : 'all';
+        $managed = isset( $_GET['wvm_managed'] ) && '1' === (string) wp_unslash( $_GET['wvm_managed'] );
+        echo '<form class="wvm-search wvm-catalog-filters" method="get"><input type="hidden" name="page" value="wvm-products">';
+        echo '<label class="screen-reader-text" for="wvm_search">Buscar producto</label><input id="wvm_search" type="search" name="wvm_search" value="' . esc_attr( $search ) . '" placeholder="Nombre o SKU exacto">';
+        echo '<label class="screen-reader-text" for="wvm_status_filter">Estado de publicación</label><select id="wvm_status_filter" name="wvm_status_filter">';
+        foreach ( WVM_Catalog::STATUSES as $value => $label ) {
+            echo '<option value="' . esc_attr( $value ) . '" ' . selected( $status, $value, false ) . '>' . esc_html( $label ) . '</option>';
+        }
+        echo '</select><label class="wvm-filter-check"><input type="checkbox" name="wvm_managed" value="1" ' .
+            checked( $managed, true, false ) . '> Solo configurados</label>';
+        echo '<button class="button" type="submit">Filtrar</button></form>';
+        $result = WVM_Catalog::search( $search, $page, array( 'status' => $status, 'managed' => $managed ) );
         if ( ! $result->products ) {
             echo '<p>Sin productos en esta página.</p>';
         } else {
@@ -238,11 +247,11 @@ final class WVM_Dashboard {
         if ( $result->max_num_pages > 1 ) {
             echo '<p class="wvm-pagination">';
             if ( $page > 1 ) {
-                echo '<a class="button" href="' . esc_url( self::url( 'wvm-products', array( 'wvm_search' => $search, 'wvm_page' => $page - 1 ) ) ) . '">Anterior</a> ';
+                echo '<a class="button" href="' . esc_url( self::url( 'wvm-products', array( 'wvm_search' => $search, 'wvm_page' => $page - 1, 'wvm_status_filter' => $status, 'wvm_managed' => $managed ? 1 : 0 ) ) ) . '">Anterior</a> ';
             }
             echo 'Página ' . esc_html( (string) $page ) . ' de ' . esc_html( (string) $result->max_num_pages );
             if ( $page < $result->max_num_pages ) {
-                echo ' <a class="button" href="' . esc_url( self::url( 'wvm-products', array( 'wvm_search' => $search, 'wvm_page' => $page + 1 ) ) ) . '">Siguiente</a>';
+                echo ' <a class="button" href="' . esc_url( self::url( 'wvm-products', array( 'wvm_search' => $search, 'wvm_page' => $page + 1, 'wvm_status_filter' => $status, 'wvm_managed' => $managed ? 1 : 0 ) ) ) . '">Siguiente</a>';
             }
             echo '</p>';
         }
