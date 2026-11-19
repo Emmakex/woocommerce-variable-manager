@@ -1,87 +1,83 @@
 # WooCommerce Variable Manager
 
-Copyright © 2026 Eduardo Yauri. See [LICENSE](LICENSE). Public visibility is for development/CI; it does not grant a license to proprietary materials. WordPress, WooCommerce and other third-party components remain under their respective licenses.
+**0.4.0-beta · © 2026 Eduardo Yauri**
 
-## 0.3.0-beta — one unified dashboard
+See [LICENSE](LICENSE) for original-code rights. This public repository is used for CI and engineering; rights to WordPress, WooCommerce and other third-party components remain under their respective licenses.
 
-A lightweight independent plugin for selling mattresses, canapés and other configurable products without manually generating every combination.
+A lightweight, independent plugin for mattresses, ottoman beds, bases and configurable sleep products. It uses WooCommerce as the commerce engine and implements **one plugin-owned dashboard** for the product workflow, without Gutenberg, Elementor or heavy page builders.
 
-**Everything essential to the Variable Manager workflow now lives under one WordPress sidebar menu:**
+## The only administration menu
 
-1. **Variable Manager → Resumen:** catalog indicators and a three-step getting-started guide.
-2. **Variable Manager → Plantillas:** create/edit reusable sets of measurements, colours, thickness/height and opening options. Starter presets for mattress and ottoman bed. No Gutenberg or hidden WP editor.
-3. **Variable Manager → Productos y tarifas:** search/paginate simple products; create new products; edit product name, SKU, publication status, full and short descriptions, categories, featured image, general stock/availability, linked template, size-price matrix, option surcharges and excluded pairs. Paste size/price rows from a spreadsheet (`90x190;299,99`) to populate the matrix in one click.
+**Variable Manager → Resumen:** product/template indicators and quick-start guide.
 
-WooCommerce still owns the product data, catalog, cart, checkout, orders, payments, stock and taxes. This plugin edits its managed products using WooCommerce CRUD objects; it does not replace WooCommerce.
+**Variable Manager → Plantillas:** reusable sizes, colors, heights/thicknesses and opening options. Starter presets for mattresses and canapés. Active templates cannot have their options changed incompatibly while in use.
 
-For now each size has a full final price. Color, thickness/height and opening can carry validated **per-option nonnegative surcharges**. Parent SKU and stock only: no inventory per size or SKU per option in this beta.
+**Variable Manager → Productos y tarifas:** create/search/edit simple WooCommerce products, including name, SKU, draft/publication status, full/short descriptions, category assignment, main image, general stock and availability. Link a template, edit final base prices for each size, paste semicolon-separated size/price rows from Excel and set nonnegative surcharges for colors, heights and openings. Block incompatible attribute *pairs* in a visual rule builder.
 
-## Developer / staging installation
+The configurator renders through classic WooCommerce product-form hooks, calculates a live estimate and checks all choices on the server. All final prices are recalculated by the server on cart calculation. Configuration is carried into cart item data and the corresponding order line. Archive cards open the configurator instead of using an invalid direct add-to-cart action.
 
-Requires WordPress, active WooCommerce, PHP 8.1+ and a theme rendering classic WooCommerce product forms.
+WooCommerce retains all customers, products, orders, payments, taxes, coupons, shipments and primary stock data. Site Architect is independent; it does not administer product pricing or grant theme write authority.
 
-- Download the staging ZIP from GitHub Actions for this pull request; install via **Plugins → Add New → Upload Plugin** on a **staging** site.
-- Open **Variable Manager → Plantillas**. Choose a mattress/canapé starter preset or start from scratch, review the attributes, then save.
-- Open **Variable Manager → Productos y tarifas**. Create or search a simple product, select the template, set all size prices or paste rows from Excel/CSV, choose a photo and publish.
-- Visit the product: selections must be validated when adding to the cart. Price is always recomputed on the server, and selected options are saved in the order line.
-- Color, thickness and opening selectors affect price when their product's surcharge matrix has nonzero values.
+## Development without a live subdomain
 
-### Data and safety guarantees
+Synthetic fixtures are available at [tests/fixtures/catalog-synthetic.json](tests/fixtures/catalog-synthetic.json).
 
-- Templates: internal `wvm_template` post type, no Gutenberg editor and no extra top-level WordPress menu.
-- Product configuration: WooCommerce CRUD metadata `_wvm_template_id` and `_wvm_price_matrix`.
-- Templates already in use cannot have their list of measurements changed in place; duplicate a template instead.
-- Server validates the complete matrix, exact measure, selectable options and currency rounding before sale.
-- Published products with missing/outdated matrices are not purchasable. Existing cart configurations are revalidated at checkout.
-- PHP admin handlers check WooCommerce management permissions and WordPress nonces.
-- Site Architect is a separate product; it never owns these commercial controls.
+They contain **8 fictional products**, **112 possible configurations**, **93 valid** and **19 deliberately forbidden** combinations. Expected prices are explicit in EUR. No real inventory, customer details, payments or orders are used.
 
-### Repository
+### Tests (no WordPress required)
 
-`woocommerce-variable-manager.php`: bootstrap and HPOS declaration.
+```bash
+php -l woocommerce-variable-manager.php
+php tests/pricing-smoke.php
+php tests/rules-smoke.php
+php tests/synthetic-catalog.php
+node --check assets/admin.js
+node --check assets/storefront.js
+```
 
-`includes/class-wvm-dashboard.php`: full plugin-owned dashboard, menu, admin forms and save handlers.
+### CI integration (disposable WordPress + real WooCommerce)
 
-`includes/class-wvm-templates.php`: reusable option templates, internal CPT storage.
+GitHub Actions also installs WordPress, WooCommerce and a MySQL service **inside an ephemeral job** and runs [tests/woocommerce-integration.php](tests/woocommerce-integration.php) to exercise real CRUD, stored templates, price rules, cart data/order metadata and fail-closed checks. The seeded demo catalog is audited, seeded twice to check idempotence and then purged. A final check confirms that **demo seeding is refused when WP_ENVIRONMENT_TYPE=production**.
 
-`includes/class-wvm-products.php`: strict price preparation, WooCommerce product metadata.
+The test environment is destroyed after the run. It does not need `colchones.kairoseth.com` and cannot change a real shop.
 
-`includes/class-wvm-pricing.php`: size/price validation.
+### Synthetic catalog inside a future nonproduction WordPress install
 
-`includes/class-wvm-storefront.php`: theme hooks, selection validation, cart reprice, order line data.
+The staging ZIP includes the test fixture and guarded WP-CLI commands:
 
-`assets/admin.js` and `assets/admin.css`: accessible, responsive dashboard with price matrix and media picker, no extra JS framework.
+```bash
+wp wvm demo preview
+wp wvm demo seed --confirm-synthetic=YES
+wp wvm demo purge --confirm-synthetic=YES
+```
 
-`tests/pricing-smoke.php`: isolated validation smoke tests.
+The write commands require `WP_ENVIRONMENT_TYPE` to be `local`, `development` or `staging` **and** explicit `--confirm-synthetic=YES`. Seeds are created **only as non-sellable, hidden drafts**, marked with `_wvm_demo_synthetic`. The purge operation removes only records carrying that marker; never use it on a product you have repurposed from a demo.
 
-### Limits of this beta
+No demo products are ever created on plugin activation, by the admin dashboard or without explicit CLI confirmation.
 
-This build is **not production-certified**. The CI runs PHP/JS syntax checks and isolated pricing tests; it does not replace WordPress/WooCommerce staging tests for save/edit, cart, taxes, discounts, gateways or checkout.
+## Installing for staging
 
-No checkout-block/Store-API compatibility is claimed. Pairwise exclusion rules are applied in JavaScript for feedback and always on the server for validation. Use the classic WooCommerce checkout for beta testing. Image gallery, categories, stock per measure/SKU, attribute surcharges, rule incompatibilities and full CSV import/export are later milestones.
+Requires PHP 8.1+, WordPress and active WooCommerce. Download the `woocommerce-variable-manager-0.4.0-beta-staging` artifact from the successful GitHub Actions workflow. Extract the plugin ZIP and upload it from WordPress → Plugins.
 
-Site Architect's greenfield theme-write permissions are separately gated, unchanged by Variable Manager.
+Open **Variable Manager** in the WP admin sidebar. The shop's theme must render classic WooCommerce product hooks; checkout blocks / Store API are **not yet certified**. For `colchones.kairoseth.com` setup and acceptance checks, see [docs/STAGING.md](docs/STAGING.md).
 
-## Roadmap priority
+## Code structure
 
-1. Validate 0.3.0-beta end to end against staging WooCommerce and the custom theme.
-2. Add reusable price supplements and option compatibility rules.
-3. Add bulk updates/import/export, and stock per SKU where genuinely needed.
+- `woocommerce-variable-manager.php` — bootstrapping and HPOS declaration.
+- `includes/class-wvm-dashboard.php` — plugin-owned admin forms and product flow.
+- `includes/class-wvm-templates.php` — internal reusable-option templates.
+- `includes/class-wvm-products.php` — validated product configuration using WooCommerce CRUD.
+- `includes/class-wvm-pricing.php` — strict per-size price matrix.
+- `includes/class-wvm-rules.php` — server-side surcharges and incompatible option pairs.
+- `includes/class-wvm-storefront.php` — classic product page, cart, order metadata.
+- `includes/class-wvm-demo-cli.php` — guarded nonproduction demo preview/seed/purge.
+- `assets/` — lightweight CSS and vanilla JavaScript.
+- `tests/` — synthetic fixture, pricing tests and ephemeral WooCommerce integration.
 
-## 0.3.0-beta — option pricing and compatibility rules
+## Known limitations
 
-The **Productos y tarifas** panel also owns the full product description, category assignment, general stock/availability and one row per available color,
-thickness/height and opening, with an optional nonnegative surcharge. The matrix
-still stores a final base price for each size.
+**Beta, not production certified.** Real staging still needs visual/accessibility checks, tax handling, coupons, multiple gateway types, shipping, refund behavior, HPOS, the custom theme and a complete order/checkout lifecycle.
 
-A visual no-code rule builder can exclude incompatible pairs of attributes, e.g.
-size **90x190** together with opening **Lateral**. There is no combinatorial
-variation explosion and no client-provided price is trusted.
+The manager handles **simple products** that use a single parent SKU/stock pool. Stock per size or separate SKU, full product gallery, advanced multi-attribute logical expressions, customer-facing variation URLs, full supplier CSV updates and Store API/Checkout Blocks remain future milestones, added only where needed. The attribute price model supports **nonnegative fixed supplements**, not complex conditional discount stacks.
 
-New product metadata: `_wvm_surcharges` and `_wvm_exclusions`. Old managed
-products with no extras still use zero surcharges. If a saved template or
-rule becomes inconsistent, the product becomes non-purchasable. Invalid items
-are removed from carts before totals. Supported checkout remains the classic
-WooCommerce flow in this development beta.
-
-For a staging installation/acceptance sequence, read [docs/STAGING.md](docs/STAGING.md).
+**Do not install this draft PR in production before staging acceptance.**
