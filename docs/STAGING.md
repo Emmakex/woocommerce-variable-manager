@@ -32,7 +32,7 @@ by the infrastructure owner. Do not deploy this beta to production.
 ## Acceptance cases (manual WooCommerce end-to-end)
 
 - [ ] Create/edit template from dashboard without Gutenberg or another editor.
-- [ ] Create new product with name, image, short description, SKU and published/draft status.
+- [ ] Create new product with name, full/short description, image, categories, general stock, SKU and published/draft status.
 - [ ] Paste prices by size; verify correct amount is saved for each measure.
 - [ ] Configure Beige/Gris and opening surcharges; compare online selection vs cart totals.
 - [ ] Invalid size + opening blocked by JS and PHP; direct crafted POST rejected.
@@ -42,6 +42,7 @@ by the infrastructure owner. Do not deploy this beta to production.
 - [ ] Two valid configurations of the same product remain distinct cart lines.
 - [ ] Checkout test: order contains selected size, color, thickness and opening.
 - [ ] Confirm WooCommerce taxes, currency decimals, coupons, shipping and refunds.
+- [ ] Test managed stock versus availability-only status and product-category assignment.
 - [ ] Confirm behavior without JavaScript and on mobile.
 - [ ] Confirm WooCommerce HPOS on a separate staging order test.
 - [ ] Confirm accessibility: keyboard selection, labels, contrast and live notices.
@@ -63,7 +64,7 @@ owner verification; never store credentials in GitHub source files.
 
 - Parent stock and SKU only, not stock differentiated per option/measurement.
 - No multi-condition/quantity rules beyond pairwise excluded options.
-- Category, full gallery, promotions, full supplier CSV import and product-type
+- Category creation, full gallery, promotions, full supplier CSV import and product-type
   conversions are not part of the current dashboard beta.
 - Store API/Cart & Checkout Blocks are intentionally out of scope pending dedicated tests.
 - Staging acceptance must precede any production release.
