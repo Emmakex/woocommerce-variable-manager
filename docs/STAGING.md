@@ -19,7 +19,7 @@ by the infrastructure owner. Do not deploy this beta to production.
 
 ## Install/test from GitHub
 
-1. Download the `woocommerce-variable-manager-0.7.0-beta-staging` artifact from the
+1. Download the `woocommerce-variable-manager-0.8.0-beta-staging` artifact from the
    latest successful PR workflow and extract its inner ZIP.
 2. In staging WP: Plugins > Add Plugin > Upload the plugin ZIP.
 3. Enable WooCommerce, then Variable Manager. Leave the commercial theme and
@@ -38,6 +38,10 @@ by the infrastructure owner. Do not deploy this beta to production.
 - [ ] Create/edit template from dashboard without Gutenberg or another editor.
 - [ ] Create new product with name, full/short description, image, categories, general stock, SKU and published/draft status.
 - [ ] Search by exact SKU and by product name, including a paginated catalog.
+- [ ] Filter catalog to published/draft status and managed-only products. Verify filters persist when switching pages.
+- [ ] On 390px mobile viewport: navigation tabs scroll, product tariffs appear as readable cards, no horizontal page overflow.
+- [ ] Change a price, navigate away: unsaved-change warning appears. Use «Deshacer cambios»: all values reset, save disabled and warning cleared.
+- [ ] Invalid, zero and negative prices cannot be submitted with JavaScript; server rejects direct crafted POST.
 - [ ] Edit several product-size prices on a single page, including comma decimals, without affecting stock or compatibility rules.
 - [ ] Confirm stale editor view is rejected and products with WooCommerce sale prices remain read-only.
 - [ ] Duplicate an existing configured product: clone is a hidden, out-of-stock draft with empty SKU, full rules/prices, original remains unchanged.
