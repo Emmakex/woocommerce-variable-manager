@@ -116,7 +116,20 @@ try {
     $second_key = WC()->cart->add_to_cart( (int) $product_id, 1 );
     integration_assert( is_string( $second_key ) && $second_key !== $cart_key, 'Distinct configurations merged in cart' );
     WC()->cart->calculate_totals();
-    integration_assert( count( WC()->cart->get_cart() ) === 2, 'Expected two distinct configured cart lines' );
+    $items = WC()->cart->get_cart();
+    integration_assert( count( $items ) === 2, 'Expected two distinct configured cart lines' );
+    integration_assert( abs( (float) $items[ $cart_key ]['data']->get_price() - 579.80 ) < 0.001, 'First cart line price changed unexpectedly' );
+    integration_assert( abs( (float) $items[ $second_key ]['data']->get_price() - 439.80 ) < 0.001, 'Second cart line price is incorrect' );
+
+    $_POST = array(
+        'wvm_size'      => '90x190',
+        'wvm_color'     => 'Beige',
+        'wvm_thickness' => '35 cm',
+        'wvm_opening'   => 'Lateral',
+    );
+    $rejected_key = WC()->cart->add_to_cart( (int) $product_id, 1 );
+    integration_assert( false === $rejected_key, 'Forbidden size/opening was added via real WooCommerce cart' );
+    integration_assert( count( WC()->cart->get_cart() ) === 2, 'Invalid cart attempt modified valid lines' );
     WC()->cart->empty_cart();
     $orderItem = new WC_Order_Item_Product();
     WVM_Storefront::order_meta( $orderItem, 'synthetic', $cartData, new WC_Order() );
