@@ -1,0 +1,5 @@
+.wvm-configurator { display: grid; gap: 12px; margin: 18px 0; }
+.wvm-configurator .wvm-field { margin: 0; }
+.wvm-configurator label { display: block; font-weight: 600; margin-bottom: 6px; }
+.wvm-configurator select { width: 100%; min-height: 44px; max-width: 480px; }
+.wvm-configurator .wvm-selected-price { font-size: 1.3rem; font-weight: 700; margin: 4px 0; }
