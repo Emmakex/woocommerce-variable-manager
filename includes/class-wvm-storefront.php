@@ -93,6 +93,8 @@ final class WVM_Storefront {
             echo '</select></p>';
         }
         echo '<p class="wvm-selected-price" data-wvm-selected-price aria-live="polite">Selecciona una medida para ver su precio</p>';
+        echo '<p class="wvm-warning" data-wvm-warning role="alert" hidden></p>';
+        echo '<p class="wvm-note">El importe definitivo se confirma en el carrito según los impuestos de la tienda.</p>';
         echo '</div>';
     }
 
