@@ -31,6 +31,9 @@ final class WVM_Storefront {
         if ( ! $config ) {
             return $html;
         }
+        if ( ! empty( $config['exclusions'] ) || array_filter( array_merge( array_values( $config['surcharges']['color'] ?? array() ), array_values( $config['surcharges']['thickness'] ?? array() ), array_values( $config['surcharges']['opening'] ?? array() ) ), 'floatval' ) ) {
+            return esc_html__( 'Precio según configuración', 'woocommerce-variable-manager' );
+        }
         $minimum = WVM_Pricing::minimum( $config['prices'] );
         return $minimum ? sprintf(
             /* translators: %s is a WooCommerce formatted price. */
@@ -69,8 +72,10 @@ final class WVM_Storefront {
             return;
         }
         $json = wp_json_encode( array(
-            'prices'   => $config['prices'],
-            'currency' => get_woocommerce_currency(),
+            'prices'     => $config['prices'],
+            'surcharges' => $config['surcharges'],
+            'exclusions' => $config['exclusions'],
+            'currency'   => get_woocommerce_currency(),
         ) );
 
         echo '<div class="wvm-configurator" data-wvm-config="' . esc_attr( $json ) . '">';
@@ -111,7 +116,8 @@ final class WVM_Storefront {
                 return false;
             }
         }
-        return null !== WVM_Pricing::price( $config['prices'], $selection['size'] ?? '' );
+        return WVM_Rules::allowed( $selection, $config['exclusions'] ) &&
+            null !== WVM_Rules::total( $config['prices'], $config['surcharges'], $selection );
     }
 
     public static function validate_add( bool $passed, int $product_id, int $quantity ): bool {
@@ -153,17 +159,24 @@ final class WVM_Storefront {
     }
 
     public static function reprice( WC_Cart $cart ): void {
-        foreach ( $cart->get_cart() as $cart_item ) {
+        foreach ( $cart->get_cart() as $cart_key => $cart_item ) {
             $product = $cart_item['data'] ?? null;
-            if ( ! $product instanceof WC_Product || ! WVM_Products::is_managed( $product ) ) {
+            if ( ! $product instanceof WC_Product ) {
+                continue;
+            }
+            if ( ! WVM_Products::is_managed( $product ) && ! isset( $cart_item['wvm_config'] ) ) {
                 continue;
             }
             $config    = WVM_Products::configuration( $product );
             $selection = $config ? self::cart_selection( $cart_item, $config ) : null;
-            if ( $selection ) {
-                $price = WVM_Pricing::price( $config['prices'], $selection['size'] );
-                $product->set_price( $price );
+            if ( ! $selection ) {
+                // Fail closed even if a checkout integration skips classic notice validation.
+                $cart->remove_cart_item( $cart_key );
+                wc_add_notice( 'Se ha retirado del carrito una configuración que ya no está disponible.', 'notice' );
+                continue;
             }
+            $price = WVM_Rules::total( $config['prices'], $config['surcharges'], $selection );
+            $product->set_price( wc_format_decimal( $price, wc_get_price_decimals() ) );
         }
     }
 
