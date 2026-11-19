@@ -112,6 +112,10 @@ final class WVM_Storefront {
         foreach ( self::FIELDS as $key => $label ) {
             $allowed = $config['options'][ $key ] ?? array();
             if ( ! $allowed ) {
+                // Disallow arbitrary client-supplied attributes not in the template.
+                if ( ! empty( $selection[ $key ] ) ) {
+                    return false;
+                }
                 continue;
             }
             if ( empty( $selection[ $key ] ) || ! in_array( $selection[ $key ], $allowed, true ) ) {
