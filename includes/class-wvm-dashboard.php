@@ -47,6 +47,7 @@ final class WVM_Dashboard {
         if ( 'wvm-products' !== $page ) {
             return;
         }
+        wp_enqueue_media();
         $product_id = isset( $_GET['id'] ) ? absint( $_GET['id'] ) : 0;
         $product    = $product_id ? wc_get_product( $product_id ) : null;
         $templates  = array();
@@ -238,6 +239,15 @@ final class WVM_Dashboard {
         wp_nonce_field( 'wvm_save_product', 'wvm_nonce' );
         echo '<p><label for="wvm_product_name"><strong>Nombre del producto</strong></label>';
         echo '<input class="large-text" type="text" name="wvm_product_name" id="wvm_product_name" required maxlength="200" value="' . esc_attr( $product ? $product->get_name() : '' ) . '" placeholder="Canapé Premium"></p>';
+        echo '<p><label for="wvm_product_short"><strong>Descripción breve</strong></label>';
+        echo '<textarea class="large-text" id="wvm_product_short" name="wvm_product_short" rows="3" placeholder="Materiales, comodidad y beneficios principales">' . esc_textarea( $product ? $product->get_short_description() : '' ) . '</textarea></p>';
+        $image_id = $product ? $product->get_image_id() : 0;
+        $image_url = $image_id ? wp_get_attachment_image_url( $image_id, 'thumbnail' ) : '';
+        echo '<div class="wvm-image-field"><strong>Imagen principal</strong><div class="wvm-image-preview">';
+        echo '<img id="wvm_image_preview" src="' . esc_url( $image_url ?: '' ) . '" alt="Vista previa de imagen" ' . ( $image_url ? '' : 'hidden' ) . '></div>';
+        echo '<input type="hidden" id="wvm_image_id" name="wvm_image_id" value="' . esc_attr( (string) $image_id ) . '">';
+        echo '<button type="button" class="button" id="wvm_choose_image">Elegir imagen</button> ';
+        echo '<button type="button" class="button" id="wvm_remove_image">Quitar</button></div>';
         echo '<div class="wvm-inline-fields"><p><label for="wvm_product_sku"><strong>SKU (opcional)</strong></label>';
         echo '<input type="text" id="wvm_product_sku" name="wvm_product_sku" value="' . esc_attr( $product ? $product->get_sku() : '' ) . '"></p>';
         echo '<p><label for="wvm_product_status"><strong>Publicación</strong></label><select name="wvm_product_status" id="wvm_product_status">';
@@ -337,6 +347,12 @@ final class WVM_Dashboard {
         $status = isset( $_POST['wvm_product_status'] ) && is_string( $_POST['wvm_product_status'] )
             ? sanitize_key( wp_unslash( $_POST['wvm_product_status'] ) ) : 'draft';
         $template_id = isset( $_POST['wvm_template_id'] ) ? absint( $_POST['wvm_template_id'] ) : 0;
+        $short = isset( $_POST['wvm_product_short'] ) && is_string( $_POST['wvm_product_short'] )
+            ? wp_kses_post( wp_unslash( $_POST['wvm_product_short'] ) ) : '';
+        $image_id = isset( $_POST['wvm_image_id'] ) ? absint( $_POST['wvm_image_id'] ) : 0;
+        if ( $image_id && ! wp_attachment_is_image( $image_id ) ) {
+            self::redirect( 'wvm-products', 'invalid_product', $id );
+        }
         $prepared = WVM_Products::prepare(
             $template_id, self::posted_array( 'wvm_matrix_sizes' ), self::posted_array( 'wvm_matrix_prices' )
         );
@@ -347,6 +363,8 @@ final class WVM_Dashboard {
         try {
             $product = $existing ?: new WC_Product_Simple();
             $product->set_name( $name );
+            $product->set_short_description( $short );
+            $product->set_image_id( $image_id );
             $product->set_sku( $sku );
             $product->set_status( $status );
             WVM_Products::apply( $product, $prepared );
