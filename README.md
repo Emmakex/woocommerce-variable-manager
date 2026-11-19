@@ -2,7 +2,7 @@
 
 Copyright © 2026 Eduardo Yauri. See [LICENSE](LICENSE). Public visibility is for development/CI; it does not grant a license to proprietary materials. WordPress, WooCommerce and other third-party components remain under their respective licenses.
 
-## 0.2.0-beta — one unified dashboard
+## 0.3.0-beta — one unified dashboard
 
 A lightweight independent plugin for selling mattresses, canapés and other configurable products without manually generating every combination.
 
@@ -14,7 +14,7 @@ A lightweight independent plugin for selling mattresses, canapés and other conf
 
 WooCommerce still owns the product data, catalog, cart, checkout, orders, payments, stock and taxes. This plugin edits its managed products using WooCommerce CRUD objects; it does not replace WooCommerce.
 
-For now each size has a full final price. Color, thickness/height and opening are selectable **without extra surcharges**. Parent SKU and stock only: no inventory per size or SKU per option in this beta.
+For now each size has a full final price. Color, thickness/height and opening can carry validated **per-option nonnegative surcharges**. Parent SKU and stock only: no inventory per size or SKU per option in this beta.
 
 ## Developer / staging installation
 
@@ -24,7 +24,7 @@ Requires WordPress, active WooCommerce, PHP 8.1+ and a theme rendering classic W
 - Open **Variable Manager → Plantillas**. Choose a mattress/canapé starter preset or start from scratch, review the attributes, then save.
 - Open **Variable Manager → Productos y tarifas**. Create or search a simple product, select the template, set all size prices or paste rows from Excel/CSV, choose a photo and publish.
 - Visit the product: selections must be validated when adding to the cart. Price is always recomputed on the server, and selected options are saved in the order line.
-- The optional color, thickness and opening selectors do not alter the price yet.
+- Color, thickness and opening selectors affect price when their product's surcharge matrix has nonzero values.
 
 ### Data and safety guarantees
 
@@ -58,12 +58,30 @@ Requires WordPress, active WooCommerce, PHP 8.1+ and a theme rendering classic W
 
 This build is **not production-certified**. The CI runs PHP/JS syntax checks and isolated pricing tests; it does not replace WordPress/WooCommerce staging tests for save/edit, cart, taxes, discounts, gateways or checkout.
 
-No checkout-block/Store-API compatibility is claimed. Use the classic WooCommerce checkout for beta testing. Image gallery, categories, stock per measure/SKU, attribute surcharges, rule incompatibilities and full CSV import/export are later milestones.
+No checkout-block/Store-API compatibility is claimed. Pairwise exclusion rules are applied in JavaScript for feedback and always on the server for validation. Use the classic WooCommerce checkout for beta testing. Image gallery, categories, stock per measure/SKU, attribute surcharges, rule incompatibilities and full CSV import/export are later milestones.
 
 Site Architect's greenfield theme-write permissions are separately gated, unchanged by Variable Manager.
 
 ## Roadmap priority
 
-1. Validate 0.2.0-beta end to end against staging WooCommerce and the custom theme.
+1. Validate 0.3.0-beta end to end against staging WooCommerce and the custom theme.
 2. Add reusable price supplements and option compatibility rules.
 3. Add bulk updates/import/export, and stock per SKU where genuinely needed.
+
+## 0.3.0-beta — option pricing and compatibility rules
+
+The **Productos y tarifas** panel now includes one row per available color,
+thickness/height and opening, with an optional nonnegative surcharge. The matrix
+still stores a final base price for each size.
+
+A visual no-code rule builder can exclude incompatible pairs of attributes, e.g.
+size **90x190** together with opening **Lateral**. There is no combinatorial
+variation explosion and no client-provided price is trusted.
+
+New product metadata: `_wvm_surcharges` and `_wvm_exclusions`. Old managed
+products with no extras still use zero surcharges. If a saved template or
+rule becomes inconsistent, the product becomes non-purchasable. Invalid items
+are removed from carts before totals. Supported checkout remains the classic
+WooCommerce flow in this development beta.
+
+For a staging installation/acceptance sequence, read [docs/STAGING.md](docs/STAGING.md).
