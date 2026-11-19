@@ -61,6 +61,14 @@ final class WVM_Products {
     }
 
     public static function apply( WC_Product_Simple $product, array $prepared ): void {
+        // Applying a WVM matrix synchronizes the parent regular price and would
+        // otherwise erase a WooCommerce sale without warning. Explicitly reject.
+        if ( '' !== $product->get_sale_price( 'edit' ) ) {
+            throw new WC_Data_Exception(
+                'wvm_sale_protected',
+                'Este producto tiene un precio de oferta. Retira la oferta en WooCommerce antes de cambiar su matriz.'
+            );
+        }
         $product->update_meta_data( self::TEMPLATE_META, $prepared['template_id'] );
         $product->update_meta_data( self::MATRIX_META, $prepared['matrix'] );
         $product->update_meta_data( WVM_Rules::SURCHARGES_META, $prepared['surcharges'] );
