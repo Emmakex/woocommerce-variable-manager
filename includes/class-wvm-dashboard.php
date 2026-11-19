@@ -247,6 +247,8 @@ final class WVM_Dashboard {
         echo '<input class="large-text" type="text" name="wvm_product_name" id="wvm_product_name" required maxlength="200" value="' . esc_attr( $product ? $product->get_name() : '' ) . '" placeholder="Canapé Premium"></p>';
         echo '<p><label for="wvm_product_short"><strong>Descripción breve</strong></label>';
         echo '<textarea class="large-text" id="wvm_product_short" name="wvm_product_short" rows="3" placeholder="Materiales, comodidad y beneficios principales">' . esc_textarea( $product ? $product->get_short_description() : '' ) . '</textarea></p>';
+        echo '<p><label for="wvm_product_desc"><strong>Descripción completa</strong></label>';
+        echo '<textarea class="large-text" id="wvm_product_desc" name="wvm_product_desc" rows="5" placeholder="Especificaciones, composición, materiales y cuidados">' . esc_textarea( $product ? $product->get_description() : '' ) . '</textarea></p>';
         $image_id = $product ? $product->get_image_id() : 0;
         $image_url = $image_id ? wp_get_attachment_image_url( $image_id, 'thumbnail' ) : '';
         echo '<div class="wvm-image-field"><strong>Imagen principal</strong><div class="wvm-image-preview">';
@@ -260,7 +262,28 @@ final class WVM_Dashboard {
         foreach ( array( 'draft' => 'Borrador', 'publish' => 'Publicado' ) as $value => $label ) {
             echo '<option value="' . esc_attr( $value ) . '" ' . selected( $product ? $product->get_status() : 'draft', $value, false ) . '>' . esc_html( $label ) . '</option>';
         }
-        echo '</select></p></div><p><label for="wvm_template_id"><strong>Plantilla de opciones</strong></label>';
+        echo '</select></p></div>';
+        $existing_categories = $product ? array_map( 'intval', $product->get_category_ids() ) : array();
+        $categories = get_terms( array( 'taxonomy' => 'product_cat', 'hide_empty' => false, 'orderby' => 'name' ) );
+        echo '<fieldset class="wvm-categories"><legend><strong>Categorías</strong></legend>';
+        if ( ! is_wp_error( $categories ) ) {
+            foreach ( $categories as $category ) {
+                echo '<label><input type="checkbox" name="wvm_product_categories[]" value="' . esc_attr( (string) $category->term_id ) . '" ' .
+                    checked( in_array( (int) $category->term_id, $existing_categories, true ), true, false ) . '> ' . esc_html( $category->name ) . '</label>';
+            }
+        }
+        echo '</fieldset><div class="wvm-stock-options"><h3>Stock general</h3>';
+        echo '<p><label><input type="checkbox" name="wvm_manage_stock" value="1" ' . checked( $product ? $product->get_manage_stock() : false, true, false ) . '> Controlar unidades disponibles de este producto</label></p>';
+        echo '<div class="wvm-inline-fields"><p><label for="wvm_stock_qty">Unidades disponibles</label>';
+        echo '<input type="number" min="0" step="1" id="wvm_stock_qty" name="wvm_stock_qty" value="' .
+            esc_attr( (string) ( $product && null !== $product->get_stock_quantity() ? $product->get_stock_quantity() : 0 ) ) . '"></p>';
+        echo '<p><label for="wvm_stock_status">Disponibilidad (sin gestión de unidades)</label><select id="wvm_stock_status" name="wvm_stock_status">';
+        foreach ( array( 'instock' => 'Disponible', 'outofstock' => 'Agotado', 'onbackorder' => 'Bajo pedido' ) as $state => $label ) {
+            echo '<option value="' . esc_attr( $state ) . '" ' .
+                selected( $product ? $product->get_stock_status() : 'instock', $state, false ) . '>' . esc_html( $label ) . '</option>';
+        }
+        echo '</select></p></div><p class="description">El stock es del producto completo, no por medida o acabado.</p></div>';
+        echo '<p><label for="wvm_template_id"><strong>Plantilla de opciones</strong></label>';
         echo '<select id="wvm_template_id" name="wvm_template_id" required>';
         echo '<option value="">Seleccionar plantilla</option>';
         foreach ( WVM_Templates::all() as $template ) {
@@ -365,6 +388,25 @@ final class WVM_Dashboard {
         $template_id = isset( $_POST['wvm_template_id'] ) ? absint( $_POST['wvm_template_id'] ) : 0;
         $short = isset( $_POST['wvm_product_short'] ) && is_string( $_POST['wvm_product_short'] )
             ? wp_kses_post( wp_unslash( $_POST['wvm_product_short'] ) ) : '';
+        $description = isset( $_POST['wvm_product_desc'] ) && is_string( $_POST['wvm_product_desc'] )
+            ? wp_kses_post( wp_unslash( $_POST['wvm_product_desc'] ) ) : '';
+        $category_ids = array_values( array_unique( array_filter( array_map( 'absint', self::posted_array( 'wvm_product_categories' ) ) ) ) );
+        foreach ( $category_ids as $category_id ) {
+            if ( ! term_exists( $category_id, 'product_cat' ) ) {
+                self::redirect( 'wvm-products', 'invalid_product', $id );
+            }
+        }
+        $manage_stock = isset( $_POST['wvm_manage_stock'] ) && '1' === (string) $_POST['wvm_manage_stock'];
+        $stock_raw = isset( $_POST['wvm_stock_qty'] ) && is_string( $_POST['wvm_stock_qty'] ) ? trim( wp_unslash( $_POST['wvm_stock_qty'] ) ) : '0';
+        if ( ! preg_match( '/^\\d{1,8}$/D', $stock_raw ) ) {
+            self::redirect( 'wvm-products', 'invalid_product', $id );
+        }
+        $stock_quantity = (int) $stock_raw;
+        $stock_status = isset( $_POST['wvm_stock_status'] ) && is_string( $_POST['wvm_stock_status'] )
+            ? sanitize_key( wp_unslash( $_POST['wvm_stock_status'] ) ) : 'instock';
+        if ( ! in_array( $stock_status, array( 'instock', 'outofstock', 'onbackorder' ), true ) ) {
+            self::redirect( 'wvm-products', 'invalid_product', $id );
+        }
         $image_id = isset( $_POST['wvm_image_id'] ) ? absint( $_POST['wvm_image_id'] ) : 0;
         if ( $image_id && ! wp_attachment_is_image( $image_id ) ) {
             self::redirect( 'wvm-products', 'invalid_product', $id );
@@ -398,6 +440,16 @@ final class WVM_Dashboard {
             $product = $existing ?: new WC_Product_Simple();
             $product->set_name( $name );
             $product->set_short_description( $short );
+            $product->set_description( $description );
+            $product->set_category_ids( $category_ids );
+            $product->set_manage_stock( $manage_stock );
+            if ( $manage_stock ) {
+                $product->set_stock_quantity( $stock_quantity );
+                $product->set_stock_status( $stock_quantity > 0 ? 'instock' : 'outofstock' );
+            } else {
+                $product->set_stock_quantity( null );
+                $product->set_stock_status( $stock_status );
+            }
             $product->set_image_id( $image_id );
             $product->set_sku( $sku );
             $product->set_status( $status );
