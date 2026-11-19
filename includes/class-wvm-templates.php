@@ -39,7 +39,7 @@ final class WVM_Templates {
                 'menu_position'       => 56,
                 'supports'            => array( 'title' ),
                 'map_meta_cap'        => true,
-                'capability_type'     => 'post',
+                'capability_type'     => 'product',
                 'exclude_from_search' => true,
             )
         );
