@@ -114,5 +114,39 @@
                 remember(String(select.value));
             });
         }
+
+        var imageButton = document.getElementById('wvm_choose_image');
+        var removeImage = document.getElementById('wvm_remove_image');
+        var imageInput = document.getElementById('wvm_image_id');
+        var imagePreview = document.getElementById('wvm_image_preview');
+        if (imageButton && imageInput && imagePreview && window.wp && window.wp.media) {
+            var frame;
+            imageButton.addEventListener('click', function () {
+                if (!frame) {
+                    frame = window.wp.media({
+                        title: 'Seleccionar imagen del producto',
+                        button: { text: 'Usar imagen' },
+                        library: { type: 'image' },
+                        multiple: false
+                    });
+                    frame.on('select', function () {
+                        var selected = frame.state().get('selection').first();
+                        if (!selected) return;
+                        var photo = selected.toJSON();
+                        imageInput.value = String(photo.id);
+                        imagePreview.src = photo.sizes && photo.sizes.thumbnail ? photo.sizes.thumbnail.url : photo.url;
+                        imagePreview.hidden = false;
+                    });
+                }
+                frame.open();
+            });
+            if (removeImage) {
+                removeImage.addEventListener('click', function () {
+                    imageInput.value = '0';
+                    imagePreview.removeAttribute('src');
+                    imagePreview.hidden = true;
+                });
+            }
+        }
     });
 }());
