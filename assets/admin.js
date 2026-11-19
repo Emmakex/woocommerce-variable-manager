@@ -1,6 +1,7 @@
-/* WooCommerce classic product editor only. No jQuery or page builder required. */
+/* Plugin-owned dashboard: light, accessible, no Gutenberg or page builder. */
 (function () {
     'use strict';
+
     document.addEventListener('DOMContentLoaded', function () {
         var select = document.getElementById('wvm_template_id');
         var tbody = document.getElementById('wvm-price-rows');
@@ -10,6 +11,7 @@
 
         var originalTemplate = String(select.value);
         var originalPrices = wvmAdminData.savedPrices || {};
+        var cache = {};
 
         function makeCell(row, text) {
             var td = document.createElement('td');
@@ -18,13 +20,24 @@
             return td;
         }
 
+        function remember(template) {
+            if (!template) return;
+            var current = {};
+            tbody.querySelectorAll('tr').forEach(function (row) {
+                var size = row.querySelector('input[name="wvm_matrix_sizes[]"]');
+                var price = row.querySelector('input[name="wvm_matrix_prices[]"]');
+                if (size && price) current[size.value] = price.value;
+            });
+            cache[template] = current;
+        }
+
         function render() {
             tbody.replaceChildren();
             var template = wvmAdminData.templates[String(select.value)] || {};
             var sizes = Array.isArray(template.size) ? template.size : [];
             if (!sizes.length) {
                 var empty = document.createElement('tr');
-                var message = makeCell(empty, select.value === '0' ? 'Selecciona una plantilla.' : 'La plantilla no tiene medidas.');
+                var message = makeCell(empty, select.value === '' ? 'Selecciona una plantilla.' : 'La plantilla no tiene medidas.');
                 message.colSpan = 2;
                 tbody.appendChild(empty);
                 return;
@@ -44,9 +57,15 @@
                 inputPrice.inputMode = 'decimal';
                 inputPrice.autocomplete = 'off';
                 inputPrice.placeholder = '0,00';
-                inputPrice.value = String(select.value) === originalTemplate && Object.prototype.hasOwnProperty.call(originalPrices, size)
-                    ? String(originalPrices[size])
-                    : '';
+                inputPrice.required = true;
+                inputPrice.setAttribute('aria-label', 'Precio para ' + size);
+                if (cache[String(select.value)] && Object.prototype.hasOwnProperty.call(cache[String(select.value)], size)) {
+                    inputPrice.value = cache[String(select.value)][size];
+                } else if (String(select.value) === originalTemplate && Object.prototype.hasOwnProperty.call(originalPrices, size)) {
+                    inputPrice.value = String(originalPrices[size]);
+                } else {
+                    inputPrice.value = '';
+                }
 
                 var priceCell = document.createElement('td');
                 priceCell.appendChild(inputSize);
@@ -56,7 +75,44 @@
             });
         }
 
-        select.addEventListener('change', render);
+        var previous = String(select.value);
+        select.addEventListener('change', function () {
+            remember(previous);
+            previous = String(select.value);
+            render();
+        });
         render();
+
+        var bulkButton = document.getElementById('wvm_apply_bulk');
+        var bulkInput = document.getElementById('wvm_bulk_prices');
+        var bulkStatus = document.getElementById('wvm_bulk_status');
+        if (bulkButton && bulkInput && bulkStatus) {
+            bulkButton.addEventListener('click', function () {
+                var inputMap = {};
+                tbody.querySelectorAll('tr').forEach(function (row) {
+                    var size = row.querySelector('input[name="wvm_matrix_sizes[]"]');
+                    var price = row.querySelector('input[name="wvm_matrix_prices[]"]');
+                    if (size && price) inputMap[size.value] = price;
+                });
+                var applied = 0;
+                var skipped = 0;
+                bulkInput.value.split(/\r?\n/).forEach(function (line) {
+                    if (!line.trim()) return;
+                    var separator = line.indexOf(';');
+                    if (separator === -1) { skipped++; return; }
+                    var size = line.slice(0, separator).trim();
+                    var price = line.slice(separator + 1).trim();
+                    if (!Object.prototype.hasOwnProperty.call(inputMap, size) ||
+                        !/^\d{1,9}([.,]\d{1,4})?$/.test(price) || Number(price.replace(',', '.')) <= 0) {
+                        skipped++;
+                        return;
+                    }
+                    inputMap[size].value = price;
+                    applied++;
+                });
+                bulkStatus.textContent = applied + ' precios aplicados' + (skipped ? ', ' + skipped + ' líneas ignoradas.' : '.');
+                remember(String(select.value));
+            });
+        }
     });
 }());
