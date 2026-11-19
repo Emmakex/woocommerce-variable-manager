@@ -124,11 +124,21 @@ final class WVM_Dashboard {
 
     public static function templates_page(): void {
         self::start( 'Variable Manager · Plantillas', 'wvm-templates' );
+        echo '<p class="wvm-preset-links"><strong>Empezar con una plantilla: </strong>';
+        echo '<a class="button button-secondary" href="' . esc_url( self::url( 'wvm-templates', array( 'wvm_preset' => 'colchon' ) ) ) . '">Colchón</a> ';
+        echo '<a class="button button-secondary" href="' . esc_url( self::url( 'wvm-templates', array( 'wvm_preset' => 'canape' ) ) ) . '">Canapé</a> ';
+        echo '<a class="button button-secondary" href="' . esc_url( self::url( 'wvm-templates' ) ) . '">Desde cero</a></p>';
         $id = isset( $_GET['id'] ) ? absint( $_GET['id'] ) : 0;
         $selected = $id ? get_post( $id ) : null;
         if ( $selected && 'wvm_template' !== $selected->post_type ) {
             wp_die( 'La plantilla solicitada no existe.' );
         }
+        $preset = isset( $_GET['wvm_preset'] ) && is_string( $_GET['wvm_preset'] ) ? sanitize_key( wp_unslash( $_GET['wvm_preset'] ) ) : '';
+        $presets = array(
+            'colchon' => array( 'title' => 'Colchón estándar', 'size' => '90x190, 105x190, 135x190, 150x190, 150x200, 160x200, 180x200', 'color' => '', 'thickness' => '20 cm, 25 cm, 30 cm', 'opening' => '' ),
+            'canape'  => array( 'title' => 'Canapé abatible', 'size' => '90x190, 105x190, 135x190, 150x190, 150x200, 160x200', 'color' => 'Beige, Gris, Blanco', 'thickness' => '30 cm, 35 cm', 'opening' => 'Frontal, Lateral' ),
+        );
+        $initial = ! $selected && isset( $presets[ $preset ] ) ? $presets[ $preset ] : array();
         $options = $selected ? WVM_Templates::options( $id ) : array();
         $templates = WVM_Templates::all();
 
@@ -151,9 +161,9 @@ final class WVM_Dashboard {
         echo '<input type="hidden" name="wvm_template_id" value="' . esc_attr( (string) $id ) . '">';
         wp_nonce_field( 'wvm_save_template', 'wvm_nonce' );
         echo '<p><label for="wvm_template_name"><strong>Nombre de plantilla</strong></label>';
-        echo '<input type="text" class="regular-text" id="wvm_template_name" name="wvm_template_name" required maxlength="160" value="' . esc_attr( $selected ? $selected->post_title : '' ) . '" placeholder="Canapé abatible tapizado"></p>';
+        echo '<input type="text" class="regular-text" id="wvm_template_name" name="wvm_template_name" required maxlength="160" value="' . esc_attr( $selected ? $selected->post_title : ( $initial['title'] ?? '' ) ) . '" placeholder="Canapé abatible tapizado"></p>';
         foreach ( WVM_Templates::ATTRIBUTES as $key => $label ) {
-            $values = isset( $options[ $key ] ) ? implode( ', ', $options[ $key ] ) : '';
+            $values = isset( $options[ $key ] ) ? implode( ', ', $options[ $key ] ) : ( $initial[ $key ] ?? '' );
             echo '<p><label for="wvm_attr_' . esc_attr( $key ) . '"><strong>' . esc_html( $label ) . '</strong></label>';
             echo '<input class="large-text" type="text" id="wvm_attr_' . esc_attr( $key ) . '" name="wvm_attributes[' . esc_attr( $key ) . ']" value="' . esc_attr( $values ) . '" placeholder="' . esc_attr( '90x190, 135x190, 150x190' ) . '"' . ( 'size' === $key ? ' required' : '' ) . '></p>';
         }
@@ -243,6 +253,10 @@ final class WVM_Dashboard {
         echo '</select></p>';
         echo '<h3>Matriz de precios por medida</h3><p class="description">Precio final de cada medida en ' . esc_html( get_woocommerce_currency() ) . '. No necesitas crear combinaciones manuales.</p>';
         echo '<table class="widefat striped wvm-matrix"><thead><tr><th>Medida</th><th>Precio</th></tr></thead><tbody id="wvm-price-rows"></tbody></table>';
+        echo '<details class="wvm-bulk"><summary>Pegar precios desde Excel o CSV</summary>';
+        echo '<p class="description">Una medida y precio por línea, separados por punto y coma. Ejemplo: <code>90x190;299,99</code></p>';
+        echo '<textarea id="wvm_bulk_prices" class="large-text code" rows="5" placeholder="90x190;299,99&#10;135x190;384,50"></textarea>';
+        echo '<p><button type="button" class="button" id="wvm_apply_bulk">Aplicar a la matriz</button> <span id="wvm_bulk_status" role="status" aria-live="polite"></span></p></details>';
         echo '<p class="description">Color, altura y apertura son opciones sin recargo en esta beta. Stock y SKU se controlan por producto, no por medida.</p>';
         submit_button( $product ? 'Guardar producto y tarifas' : 'Crear producto', 'primary', 'submit', false );
         echo '</form></section></div></div>';
