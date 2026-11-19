@@ -18,7 +18,7 @@ define( 'WVM_URL', plugin_dir_url( __FILE__ ) );
 
 add_action( 'before_woocommerce_init', static function (): void {
     if ( class_exists( '\\Automattic\\WooCommerce\\Utilities\\FeaturesUtil' ) ) {
-        \\Automattic\\WooCommerce\\Utilities\\FeaturesUtil::declare_compatibility( 'custom_order_tables', __FILE__, true );
+        \Automattic\WooCommerce\Utilities\FeaturesUtil::declare_compatibility( 'custom_order_tables', __FILE__, true );
     }
 } );
 
