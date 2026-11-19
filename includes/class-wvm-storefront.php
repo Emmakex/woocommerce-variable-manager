@@ -16,6 +16,7 @@ final class WVM_Storefront {
     public static function init(): void {
         add_filter( 'woocommerce_is_purchasable', array( __CLASS__, 'purchasable' ), 10, 2 );
         add_action( 'woocommerce_before_add_to_cart_button', array( __CLASS__, 'render' ) );
+        add_action( 'wp_enqueue_scripts', array( __CLASS__, 'assets' ) );
         add_filter( 'woocommerce_add_to_cart_validation', array( __CLASS__, 'validate_add' ), 10, 3 );
         add_filter( 'woocommerce_add_cart_item_data', array( __CLASS__, 'cart_data' ), 10, 3 );
         add_action( 'woocommerce_before_calculate_totals', array( __CLASS__, 'reprice' ), 20 );
@@ -31,6 +32,18 @@ final class WVM_Storefront {
         return $purchasable;
     }
 
+    public static function assets(): void {
+        if ( ! is_product() ) {
+            return;
+        }
+        $product = wc_get_product( get_queried_object_id() );
+        if ( ! $product instanceof WC_Product || ! WVM_Products::is_managed( $product ) ) {
+            return;
+        }
+        wp_enqueue_script( 'wvm-storefront', WVM_URL . 'assets/storefront.js', array(), WVM_VERSION, true );
+        wp_enqueue_style( 'wvm-storefront', WVM_URL . 'assets/storefront.css', array(), WVM_VERSION );
+    }
+
     public static function render(): void {
         global $product;
         if ( ! $product instanceof WC_Product || ! WVM_Products::is_managed( $product ) ) {
@@ -41,8 +54,6 @@ final class WVM_Storefront {
             echo '<p role="alert">Este producto necesita completar su matriz de precios antes de venderse.</p>';
             return;
         }
-        wp_enqueue_script( 'wvm-storefront', WVM_URL . 'assets/storefront.js', array(), WVM_VERSION, true );
-        wp_enqueue_style( 'wvm-storefront', WVM_URL . 'assets/storefront.css', array(), WVM_VERSION );
         $json = wp_json_encode( array(
             'prices'   => $config['prices'],
             'currency' => get_woocommerce_currency(),
