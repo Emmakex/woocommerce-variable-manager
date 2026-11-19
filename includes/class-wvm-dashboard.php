@@ -25,6 +25,7 @@ final class WVM_Dashboard {
         add_submenu_page( 'wvm-dashboard', 'Resumen', 'Resumen', self::CAPABILITY, 'wvm-dashboard', array( __CLASS__, 'overview' ) );
         add_submenu_page( 'wvm-dashboard', 'Plantillas', 'Plantillas', self::CAPABILITY, 'wvm-templates', array( __CLASS__, 'templates_page' ) );
         add_submenu_page( 'wvm-dashboard', 'Productos y tarifas', 'Productos y tarifas', self::CAPABILITY, 'wvm-products', array( __CLASS__, 'products_page' ) );
+        add_submenu_page( 'wvm-dashboard', 'Importar / exportar', 'Importar / exportar', self::CAPABILITY, 'wvm-bulk', array( 'WVM_Bulk_Admin', 'render' ) );
     }
 
     private static function url( string $page, array $extra = array() ): string {
@@ -40,7 +41,7 @@ final class WVM_Dashboard {
     public static function assets(): void {
         $page = isset( $_GET['page'] ) && is_string( $_GET['page'] )
             ? sanitize_key( wp_unslash( $_GET['page'] ) ) : '';
-        if ( ! in_array( $page, array( 'wvm-dashboard', 'wvm-templates', 'wvm-products' ), true ) ) {
+        if ( ! in_array( $page, array( 'wvm-dashboard', 'wvm-templates', 'wvm-products', 'wvm-bulk' ), true ) ) {
             return;
         }
         wp_enqueue_style( 'wvm-admin', WVM_URL . 'assets/admin.css', array(), WVM_VERSION );
@@ -67,7 +68,7 @@ final class WVM_Dashboard {
         ) );
     }
 
-    private static function start( string $title, string $active ): void {
+    public static function start( string $title, string $active ): void {
         self::ensure_permission();
         echo '<div class="wrap wvm-dashboard"><h1>' . esc_html( $title ) . '</h1>';
         echo '<p class="description">Gestiona plantillas, productos y precios desde un único lugar. WooCommerce sigue gestionando pedidos y pagos.</p>';
@@ -76,6 +77,7 @@ final class WVM_Dashboard {
             'wvm-dashboard' => 'Resumen',
             'wvm-templates' => 'Plantillas',
             'wvm-products'  => 'Productos y tarifas',
+            'wvm-bulk'      => 'Importar / exportar',
         ) as $page => $label ) {
             $class = $active === $page ? 'nav-tab nav-tab-active' : 'nav-tab';
             echo '<a class="' . esc_attr( $class ) . '" href="' . esc_url( self::url( $page ) ) . '">' . esc_html( $label ) . '</a>';
