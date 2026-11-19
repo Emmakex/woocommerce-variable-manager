@@ -19,7 +19,7 @@ by the infrastructure owner. Do not deploy this beta to production.
 
 ## Install/test from GitHub
 
-1. Download the `woocommerce-variable-manager-0.5.0-beta-staging` artifact from the
+1. Download the `woocommerce-variable-manager-0.6.0-beta-staging` artifact from the
    latest successful PR workflow and extract its inner ZIP.
 2. In staging WP: Plugins > Add Plugin > Upload the plugin ZIP.
 3. Enable WooCommerce, then Variable Manager. Leave the commercial theme and
@@ -36,6 +36,8 @@ by the infrastructure owner. Do not deploy this beta to production.
 
 - [ ] Create/edit template from dashboard without Gutenberg or another editor.
 - [ ] Create new product with name, full/short description, image, categories, general stock, SKU and published/draft status.
+- [ ] Search by exact SKU and by product name, including a paginated catalog.
+- [ ] Duplicate an existing configured product: clone is a hidden, out-of-stock draft with empty SKU, full rules/prices, original remains unchanged.
 - [ ] Paste prices by size; verify correct amount is saved for each measure.
 - [ ] Export and re-import semicolon CSV using `sku;medida;precio`, preview changes before confirming.
 - [ ] CSV with one unknown SKU or measure rejects the **whole** import without partial writes.
