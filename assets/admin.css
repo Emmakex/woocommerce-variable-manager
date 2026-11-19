@@ -96,3 +96,68 @@
   .wvm-dashboard .wvm-quick-table th[scope="rowgroup"] { min-width: 150px; }
   .wvm-dashboard .wvm-quick-toolbar .button-primary { width: 100%; }
 }
+
+/* Catalog filters: short inputs, touch-friendly controls and keyboard focus. */
+.wvm-dashboard .wvm-catalog-filters,
+.wvm-dashboard .wvm-quick-search { display:flex; flex-wrap:wrap; align-items:center; gap:10px; }
+.wvm-dashboard .wvm-catalog-filters > input[type="search"],
+.wvm-dashboard .wvm-quick-search > input[type="search"] { flex:2 1 220px; }
+.wvm-dashboard .wvm-catalog-filters > select,
+.wvm-dashboard .wvm-quick-search > select { flex:1 1 175px; width:auto; }
+.wvm-dashboard .wvm-filter-check { display:inline-flex; align-items:center; gap:7px; margin:0; padding:8px 0; font-weight:600; white-space:nowrap; }
+.wvm-dashboard .wvm-filter-check input { margin:0; }
+.wvm-dashboard .wvm-catalog-filters > button,
+.wvm-dashboard .wvm-quick-search > button { min-height:38px; }
+.wvm-dashboard a:focus-visible,
+.wvm-dashboard button:focus-visible,
+.wvm-dashboard input:focus-visible,
+.wvm-dashboard select:focus-visible { outline:2px solid #2271b1; outline-offset:2px; }
+.wvm-dashboard .wvm-quick-buttons { display:flex; flex-wrap:wrap; gap:10px; align-items:center; }
+.wvm-dashboard .wvm-quick-price.wvm-quick-invalid { border-color:#b32d2e; background:#fce8e8; }
+.wvm-dashboard .wvm-quick-buttons button:disabled { cursor:not-allowed; opacity:.55; }
+@media (max-width: 782px) {
+  .wvm-dashboard .wvm-catalog-filters,
+  .wvm-dashboard .wvm-quick-search { align-items:stretch; }
+  .wvm-dashboard .wvm-catalog-filters > input[type="search"],
+  .wvm-dashboard .wvm-catalog-filters > select,
+  .wvm-dashboard .wvm-quick-search > input[type="search"],
+  .wvm-dashboard .wvm-quick-search > select { flex:1 1 100%; width:100%; }
+  .wvm-dashboard .wvm-catalog-filters > button,
+  .wvm-dashboard .wvm-quick-search > button { width:100%; }
+  /* Each managed product becomes an accessible card. Keep the native table
+     semantics on desktop; no sticky wide grid on narrow touch screens. */
+  .wvm-dashboard .wvm-quick-table-wrap { max-height:none; overflow:visible; border:0; }
+  .wvm-dashboard .wvm-quick-table { display:block; width:100%; min-width:0; border:0; background:transparent; }
+  .wvm-dashboard .wvm-quick-table thead { display:none; }
+  .wvm-dashboard .wvm-quick-table tbody.wvm-quick-product {
+    display:block; width:100%; margin:0 0 14px;
+    border:1px solid #c3c4c7; border-radius:8px; overflow:hidden;
+    background:#fff;
+  }
+  .wvm-dashboard .wvm-quick-table tbody.wvm-quick-product tr {
+    display:grid; grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:6px 12px; padding:10px 12px; border:0;
+    border-bottom:1px solid #eee;
+  }
+  .wvm-dashboard .wvm-quick-table tbody.wvm-quick-product tr:last-child { border-bottom:0; }
+  .wvm-dashboard .wvm-quick-table tbody.wvm-quick-product th[scope="rowgroup"] {
+    display:block; grid-column:1/-1; min-width:0; max-width:none;
+    width:auto; margin:-10px -12px 4px; padding:12px;
+    background:#f6f7f7; border:0;
+  }
+  .wvm-dashboard .wvm-quick-table tbody.wvm-quick-product td {
+    display:block; width:auto; padding:3px 0; border:0; overflow-wrap:anywhere;
+  }
+  .wvm-dashboard .wvm-quick-table td[data-label]::before {
+    content:attr(data-label); display:block; margin-bottom:4px;
+    font-size:11px; font-weight:600; color:#50575e;
+  }
+  .wvm-dashboard .wvm-quick-table td:last-child { grid-column:1/-1; }
+  .wvm-dashboard .wvm-quick-price { width:100%; max-width:none; }
+  .wvm-dashboard .wvm-quick-toolbar { position:sticky; bottom:0; margin:0 -16px; border-radius:0; z-index:3; }
+  .wvm-dashboard .wvm-quick-buttons { flex:1 1 100%; display:grid; grid-template-columns:1fr 1fr; }
+  .wvm-dashboard .wvm-quick-buttons .button { width:100%; margin:0; }
+}
+@media (max-width: 430px) {
+  .wvm-dashboard .wvm-quick-buttons { grid-template-columns:1fr; }
+}
