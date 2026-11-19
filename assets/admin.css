@@ -65,3 +65,14 @@
 .wvm-dashboard .wvm-bulk-scroll { max-height: 420px; overflow: auto; border: 1px solid #ddd; border-radius: 6px; }
 .wvm-dashboard .wvm-bulk-scroll table { margin: 0; }
 .wvm-dashboard .wvm-bulk-scroll th { position: sticky; top: 0; background: #fff; }
+
+/* Quick product list actions for a compact and keyboard-friendly dashboard. */
+.wvm-dashboard .wvm-catalog-table .wvm-catalog-sku { display:block; margin-top:4px; font-size:12px; color:#646970; overflow-wrap:anywhere; }
+.wvm-dashboard .wvm-catalog-table td:last-child { white-space:nowrap; }
+.wvm-dashboard .wvm-duplicate-form { display:inline; margin:0 0 0 8px; }
+.wvm-dashboard .wvm-duplicate-form button { cursor:pointer; padding:2px 0; }
+@media (max-width: 782px) {
+  .wvm-dashboard .wvm-catalog-table td:last-child { white-space:normal; }
+  .wvm-dashboard .wvm-duplicate-form { display:block; margin:6px 0 0; }
+  .wvm-dashboard .wvm-catalog-table { display:block; overflow-x:auto; }
+}
