@@ -14,6 +14,7 @@ final class WVM_Dashboard {
         add_action( 'admin_enqueue_scripts', array( __CLASS__, 'assets' ) );
         add_action( 'admin_post_wvm_save_template', array( __CLASS__, 'save_template' ) );
         add_action( 'admin_post_wvm_save_product', array( __CLASS__, 'save_product' ) );
+        add_action( 'admin_post_wvm_duplicate_product', array( __CLASS__, 'duplicate_product' ) );
     }
 
     public static function menu(): void {
@@ -92,6 +93,8 @@ final class WVM_Dashboard {
         $messages = array(
             'template_saved'        => array( 'success', 'Plantilla guardada.' ),
             'product_saved'         => array( 'success', 'Producto y matriz de precios guardados.' ),
+            'product_duplicated'    => array( 'success', 'Borrador duplicado: revisa su SKU, stock y visibilidad antes de publicar.' ),
+            'duplicate_failed'      => array( 'error', 'No se pudo duplicar este producto. Comprueba que su configuración siga siendo válida.' ),
             'invalid_template'      => array( 'error', 'Introduce un nombre y al menos una medida válida.' ),
             'template_sizes_in_use' => array( 'error', 'Una plantilla asignada a productos no puede cambiar sus opciones. Duplica la plantilla y configura los nuevos precios para evitar errores.' ),
             'invalid_rules'         => array( 'error', 'Revisa suplementos e incompatibilidades. No se ha guardado el producto.' ),
@@ -195,33 +198,31 @@ final class WVM_Dashboard {
         $search = isset( $_GET['wvm_search'] ) && is_string( $_GET['wvm_search'] ) ? sanitize_text_field( wp_unslash( $_GET['wvm_search'] ) ) : '';
         $page = isset( $_GET['wvm_page'] ) ? max( 1, absint( $_GET['wvm_page'] ) ) : 1;
         echo '<form class="wvm-search" method="get"><input type="hidden" name="page" value="wvm-products">';
-        echo '<label class="screen-reader-text" for="wvm_search">Buscar producto</label><input id="wvm_search" type="search" name="wvm_search" value="' . esc_attr( $search ) . '" placeholder="Buscar por nombre">';
+        echo '<label class="screen-reader-text" for="wvm_search">Buscar producto</label><input id="wvm_search" type="search" name="wvm_search" value="' . esc_attr( $search ) . '" placeholder="Buscar por nombre o SKU exacto">';
         echo '<button class="button" type="submit">Buscar</button></form>';
-        $args = array(
-            'type'     => 'simple',
-            'limit'    => 20,
-            'paginate' => true,
-            'page'     => $page,
-            'status'   => array( 'publish', 'draft', 'pending', 'private' ),
-            'orderby'  => 'date',
-            'order'    => 'DESC',
-        );
-        if ( $search !== '' ) {
-            $args['search'] = $search;
-        }
-        $result = wc_get_products( $args );
+        $result = WVM_Catalog::search( $search, $page );
         if ( ! $result->products ) {
             echo '<p>Sin productos en esta página.</p>';
         } else {
-            echo '<table class="widefat striped"><thead><tr><th>Producto</th><th>Estado</th><th>Tarifas</th></tr></thead><tbody>';
+            echo '<table class="widefat striped wvm-catalog-table"><thead><tr><th>Producto / SKU</th><th>Estado</th><th>Tarifas</th><th>Acciones</th></tr></thead><tbody>';
             foreach ( $result->products as $entry ) {
                 if ( ! current_user_can( 'edit_post', $entry->get_id() ) ) {
                     continue;
                 }
                 $managed = WVM_Products::is_managed( $entry );
-                echo '<tr><td><a href="' . esc_url( self::url( 'wvm-products', array( 'id' => $entry->get_id() ) ) ) . '"><strong>' . esc_html( $entry->get_name() ) . '</strong></a></td>';
+                echo '<tr><td><a href="' . esc_url( self::url( 'wvm-products', array( 'id' => $entry->get_id() ) ) ) . '"><strong>' . esc_html( $entry->get_name() ) . '</strong></a>';
+                echo '<span class="wvm-catalog-sku">' . esc_html( $entry->get_sku() ?: 'Sin SKU' ) . '</span></td>';
                 echo '<td>' . esc_html( 'publish' === $entry->get_status() ? 'Publicado' : 'Borrador' ) . '</td>';
-                echo '<td>' . esc_html( $managed ? 'Configuradas' : 'Sin plantilla' ) . '</td></tr>';
+                echo '<td>' . esc_html( $managed ? 'Configuradas' : 'Sin plantilla' ) . '</td>';
+                echo '<td><a href="' . esc_url( self::url( 'wvm-products', array( 'id' => $entry->get_id() ) ) ) . '">Editar</a>';
+                if ( $managed && WVM_Products::configuration( $entry ) ) {
+                    echo '<form class="wvm-duplicate-form" method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '">';
+                    echo '<input type="hidden" name="action" value="wvm_duplicate_product">';
+                    echo '<input type="hidden" name="wvm_source_id" value="' . esc_attr( (string) $entry->get_id() ) . '">';
+                    wp_nonce_field( 'wvm_duplicate_' . $entry->get_id(), 'wvm_nonce' );
+                    echo '<button type="submit" class="button-link">Duplicar borrador</button></form>';
+                }
+                echo '</td></tr>';
             }
             echo '</tbody></table>';
         }
@@ -372,6 +373,23 @@ final class WVM_Dashboard {
         }
         update_post_meta( (int) $saved, WVM_Templates::META_KEY, $options );
         self::redirect( 'wvm-templates', 'template_saved', (int) $saved );
+    }
+
+    public static function duplicate_product(): void {
+        self::ensure_permission();
+        if ( 'POST' !== ( $_SERVER['REQUEST_METHOD'] ?? '' ) ) {
+            wp_die( 'Método no permitido.' );
+        }
+        $source_id = isset( $_POST['wvm_source_id'] ) ? absint( wp_unslash( $_POST['wvm_source_id'] ) ) : 0;
+        if ( ! $source_id ) {
+            wp_die( 'Producto de origen no válido.' );
+        }
+        check_admin_referer( 'wvm_duplicate_' . $source_id, 'wvm_nonce' );
+        $new_id = WVM_Catalog::duplicate( $source_id );
+        if ( is_wp_error( $new_id ) ) {
+            self::redirect( 'wvm-products', 'duplicate_failed', $source_id );
+        }
+        self::redirect( 'wvm-products', 'product_duplicated', $new_id );
     }
 
     public static function save_product(): void {
