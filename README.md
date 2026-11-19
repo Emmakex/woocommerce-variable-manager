@@ -10,7 +10,7 @@ A lightweight independent plugin for selling mattresses, canapés and other conf
 
 1. **Variable Manager → Resumen:** catalog indicators and a three-step getting-started guide.
 2. **Variable Manager → Plantillas:** create/edit reusable sets of measurements, colours, thickness/height and opening options. Starter presets for mattress and ottoman bed. No Gutenberg or hidden WP editor.
-3. **Variable Manager → Productos y tarifas:** search/paginate simple products; create new products; edit product name, SKU, publication status, short description, featured image, linked template and size-price matrix. Paste size/price rows from a spreadsheet (`90x190;299,99`) to populate the matrix in one click.
+3. **Variable Manager → Productos y tarifas:** search/paginate simple products; create new products; edit product name, SKU, publication status, full and short descriptions, categories, featured image, general stock/availability, linked template, size-price matrix, option surcharges and excluded pairs. Paste size/price rows from a spreadsheet (`90x190;299,99`) to populate the matrix in one click.
 
 WooCommerce still owns the product data, catalog, cart, checkout, orders, payments, stock and taxes. This plugin edits its managed products using WooCommerce CRUD objects; it does not replace WooCommerce.
 
@@ -70,7 +70,7 @@ Site Architect's greenfield theme-write permissions are separately gated, unchan
 
 ## 0.3.0-beta — option pricing and compatibility rules
 
-The **Productos y tarifas** panel now includes one row per available color,
+The **Productos y tarifas** panel also owns the full product description, category assignment, general stock/availability and one row per available color,
 thickness/height and opening, with an optional nonnegative surcharge. The matrix
 still stores a final base price for each size.
 
