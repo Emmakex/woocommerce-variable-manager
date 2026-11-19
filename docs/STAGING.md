@@ -19,7 +19,7 @@ by the infrastructure owner. Do not deploy this beta to production.
 
 ## Install/test from GitHub
 
-1. Download the `woocommerce-variable-manager-0.8.0-beta-staging` artifact from the
+1. Download the `woocommerce-variable-manager-0.9.0-beta-staging` artifact from the
    latest successful PR workflow and extract its inner ZIP.
 2. In staging WP: Plugins > Add Plugin > Upload the plugin ZIP.
 3. Enable WooCommerce, then Variable Manager. Leave the commercial theme and
@@ -59,6 +59,8 @@ by the infrastructure owner. Do not deploy this beta to production.
 - [ ] Two valid configurations of the same product remain distinct cart lines.
 - [ ] Checkout test: order contains selected size, color, thickness and opening.
 - [ ] Confirm WooCommerce taxes, currency decimals, coupons, shipping and refunds.
+- [ ] Review synthetic checkout CI: two configured product lines, EUR coupon of 20, 21% ES VAT, persisted order line metadata, no gateway charges.
+- [ ] Separately run a real staging storefront checkout in browser (including shipping, payment sandbox, tax address and HPOS); synthetic order tests are insufficient.
 - [ ] Test managed stock versus availability-only status and product-category assignment.
 - [ ] Confirm behavior without JavaScript and on mobile.
 - [ ] Confirm WooCommerce HPOS on a separate staging order test.
