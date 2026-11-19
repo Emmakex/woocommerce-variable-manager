@@ -3,3 +3,7 @@
 .wvm-configurator label { display: block; font-weight: 600; margin-bottom: 6px; }
 .wvm-configurator select { width: 100%; min-height: 44px; max-width: 480px; }
 .wvm-configurator .wvm-selected-price { font-size: 1.3rem; font-weight: 700; margin: 4px 0; }
+
+.wvm-configurator .wvm-warning:not([hidden]) { color: #9c2020; border-left: 3px solid #b42318; padding: 8px 12px; margin: 0; }
+.wvm-configurator .wvm-warning[hidden] { display: none; }
+.wvm-configurator .wvm-note { font-size: .85rem; opacity: .75; margin: 0; }
