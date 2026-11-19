@@ -148,6 +148,8 @@ final class WVM_Quick_Edit {
         $search = isset( $_GET['wvm_search'] ) && is_string( $_GET['wvm_search'] )
             ? sanitize_text_field( wp_unslash( $_GET['wvm_search'] ) ) : '';
         $page = isset( $_GET['wvm_page'] ) ? max( 1, absint( $_GET['wvm_page'] ) ) : 1;
+        $status = isset( $_GET['wvm_status_filter'] ) && is_string( $_GET['wvm_status_filter'] )
+            ? WVM_Catalog::allowed_status( sanitize_key( wp_unslash( $_GET['wvm_status_filter'] ) ) ) : 'all';
 
         echo '<section class="wvm-card wvm-quick-editor">';
         echo '<h2>Tarifas de varios productos, en una sola pantalla</h2>';
@@ -156,28 +158,16 @@ final class WVM_Quick_Edit {
         echo '<input type="hidden" name="page" value="wvm-quick">';
         echo '<label class="screen-reader-text" for="wvm_quick_search">Buscar producto por nombre o SKU</label>';
         echo '<input id="wvm_quick_search" type="search" name="wvm_search" value="' . esc_attr( $search ) . '" placeholder="Nombre o SKU exacto">';
-        echo '<button class="button" type="submit">Buscar</button></form>';
-
-        $query = array(
-            'wvm_managed' => true,
-            'type'        => 'simple',
-            'limit'       => self::PAGE_SIZE,
-            'page'        => $page,
-            'paginate'    => true,
-            'status'      => array( 'publish', 'draft', 'pending', 'private' ),
-            'orderby'     => 'date',
-            'order'       => 'DESC',
-        );
-        if ( '' !== $search ) {
-            $sku_id = wc_get_product_id_by_sku( $search );
-            $matched = $sku_id ? wc_get_product( $sku_id ) : null;
-            if ( $matched instanceof WC_Product_Simple && WVM_Products::is_managed( $matched ) ) {
-                $query['include'] = array( (int) $sku_id );
-            } else {
-                $query['search'] = $search;
-            }
+        echo '<label class="screen-reader-text" for="wvm_quick_status">Estado de publicación</label>';
+        echo '<select name="wvm_status_filter" id="wvm_quick_status">';
+        foreach ( WVM_Catalog::STATUSES as $value => $label ) {
+            echo '<option value="' . esc_attr( $value ) . '" ' . selected( $status, $value, false ) . '>' . esc_html( $label ) . '</option>';
         }
-        $result = wc_get_products( $query );
+        echo '</select><button class="button" type="submit">Filtrar</button></form>';
+
+        $result = WVM_Catalog::search( $search, $page, array(
+            'managed' => true, 'status' => $status, 'per_page' => self::PAGE_SIZE,
+        ) );
 
         $rendered = 0;
         echo '<form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '" id="wvm-quick-form">';
@@ -241,7 +231,10 @@ final class WVM_Quick_Edit {
         if ( $rendered ) {
             echo '<div class="wvm-quick-toolbar">';
             echo '<p class="wvm-quick-count" role="status" aria-live="polite"><strong data-wvm-changed-count>0</strong> precios modificados</p>';
-            echo '<button type="submit" class="button button-primary button-large">Guardar precios modificados</button>';
+            echo '<div class="wvm-quick-buttons">';
+            echo '<button type="button" id="wvm-quick-undo" class="button button-secondary">Deshacer cambios</button>';
+            echo '<button type="submit" id="wvm-quick-save" class="button button-primary button-large">Guardar precios modificados</button>';
+            echo '</div>';
             echo '</div>';
             echo '<p class="description">Si alguien modifica el mismo producto antes de guardar, se cancelará el lote sin sobrescribir su trabajo. Las ofertas activas se muestran en modo lectura.</p>';
         } else {
@@ -252,11 +245,11 @@ final class WVM_Quick_Edit {
         if ( $result->max_num_pages > 1 ) {
             echo '<div class="wvm-pagination">';
             if ( $page > 1 ) {
-                echo '<a class="button" href="' . esc_url( self::url( array( 'wvm_search' => $search, 'wvm_page' => $page - 1 ) ) ) . '">Anterior</a> ';
+                echo '<a class="button" href="' . esc_url( self::url( array( 'wvm_search' => $search, 'wvm_page' => $page - 1, 'wvm_status_filter' => $status ) ) ) . '">Anterior</a> ';
             }
             echo 'Página ' . esc_html( (string) $page ) . ' de ' . esc_html( (string) $result->max_num_pages );
             if ( $page < $result->max_num_pages ) {
-                echo ' <a class="button" href="' . esc_url( self::url( array( 'wvm_search' => $search, 'wvm_page' => $page + 1 ) ) ) . '">Siguiente</a>';
+                echo ' <a class="button" href="' . esc_url( self::url( array( 'wvm_search' => $search, 'wvm_page' => $page + 1, 'wvm_status_filter' => $status ) ) ) . '">Siguiente</a>';
             }
             echo '</div>';
         }
