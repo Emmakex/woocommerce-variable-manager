@@ -22,6 +22,8 @@ jobs:
         run: find . -type f -name '*.php' -print0 | xargs -0 -n1 php -l
       - name: Price matrix smoke tests
         run: php tests/pricing-smoke.php
+      - name: Rule engine smoke tests
+        run: php tests/rules-smoke.php
       - name: JavaScript syntax
         run: |
           node --check assets/admin.js
@@ -31,10 +33,10 @@ jobs:
           mkdir -p dist/woocommerce-variable-manager
           cp -R includes assets woocommerce-variable-manager.php README.md LICENSE dist/woocommerce-variable-manager/
           cd dist
-          zip -qr ../woocommerce-variable-manager-0.2.0-beta.zip woocommerce-variable-manager
+          zip -qr ../woocommerce-variable-manager-0.3.0-beta.zip woocommerce-variable-manager
       - name: Upload staging installer
         uses: actions/upload-artifact@v4
         with:
-          name: woocommerce-variable-manager-0.2.0-beta-staging
-          path: woocommerce-variable-manager-0.2.0-beta.zip
+          name: woocommerce-variable-manager-0.3.0-beta-staging
+          path: woocommerce-variable-manager-0.3.0-beta.zip
           retention-days: 7
