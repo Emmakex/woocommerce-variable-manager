@@ -42,7 +42,6 @@ try {
         $original_settings[ $key ] = get_option( $key, false );
         update_option( $key, $value );
     }
-    WC()->countries->init();
     checkout_assert( wc_tax_enabled(), 'tax calculation not enabled in temporary installation' );
 
     $tax_rate_id = WC_Tax::_insert_tax_rate( array(
