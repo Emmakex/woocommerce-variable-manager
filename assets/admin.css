@@ -32,3 +32,13 @@
   .wvm-dashboard .wvm-inline-fields { grid-template-columns: 1fr; gap: 0; }
   .wvm-dashboard .wvm-section-head { flex-wrap: wrap; }
 }
+
+.wvm-dashboard .wvm-preset-links { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 14px 0; }
+.wvm-dashboard .wvm-bulk { margin: 14px 0; padding: 12px; border: 1px solid #dcdcde; border-radius: 6px; }
+.wvm-dashboard .wvm-bulk summary { font-weight: 600; cursor: pointer; }
+.wvm-dashboard .wvm-bulk textarea { margin-top: 8px; min-height: 100px; }
+.wvm-dashboard .wvm-image-field { padding: 12px; border: 1px solid #dcdcde; border-radius: 6px; }
+.wvm-dashboard .wvm-image-field .wvm-image-preview { margin: 12px 0; }
+.wvm-dashboard #wvm_image_preview:not([hidden]) { display: block; max-width: 150px; width: auto; height: auto; border-radius: 5px; }
+.wvm-dashboard #wvm_image_preview[hidden] { display: none; }
+.wvm-dashboard .wvm-image-field button { margin: 0 6px 0 0; }
