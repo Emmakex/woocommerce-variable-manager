@@ -21,6 +21,7 @@ final class WVM_Storefront {
         add_action( 'wp_enqueue_scripts', array( __CLASS__, 'assets' ) );
         add_filter( 'woocommerce_add_to_cart_validation', array( __CLASS__, 'validate_add' ), 10, 3 );
         add_filter( 'woocommerce_add_cart_item_data', array( __CLASS__, 'cart_data' ), 10, 3 );
+        add_action( 'woocommerce_add_to_cart', array( __CLASS__, 'verify_inserted_item' ), 99, 6 );
         add_action( 'woocommerce_before_calculate_totals', array( __CLASS__, 'reprice' ), 20 );
         add_filter( 'woocommerce_get_item_data', array( __CLASS__, 'display_cart' ), 10, 2 );
         add_action( 'woocommerce_checkout_create_order_line_item', array( __CLASS__, 'order_meta' ), 10, 4 );
@@ -171,6 +172,32 @@ final class WVM_Storefront {
             );
         }
         return $data;
+    }
+
+    /**
+     * Defense in depth: WC_Cart::add_to_cart() called programmatically does
+     * not necessarily pass the classic form-handler validation filter.
+     * Immediately remove any managed product lacking a valid configuration.
+     */
+    public static function verify_inserted_item(
+        string $cart_key, int $product_id, int $quantity, int $variation_id,
+        array $variation, array $cart_item_data
+    ): void {
+        $product = wc_get_product( $product_id );
+        if ( ! $product instanceof WC_Product || ! WVM_Products::is_managed( $product ) ) {
+            return;
+        }
+        $cart = WC()->cart;
+        if ( ! $cart instanceof WC_Cart ) {
+            return;
+        }
+        $item = $cart->get_cart();
+        $item = $item[ $cart_key ] ?? array();
+        $config = WVM_Products::configuration( $product );
+        if ( ! $config || ! self::cart_selection( $item, $config ) ) {
+            $cart->remove_cart_item( $cart_key );
+            wc_add_notice( 'La configuración indicada no está disponible. Selecciona otras opciones.', 'error' );
+        }
     }
 
     private static function cart_selection( array $cart_item, array $config ): ?array {
