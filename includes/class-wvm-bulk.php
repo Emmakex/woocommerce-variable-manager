@@ -80,7 +80,7 @@ final class WVM_Bulk {
         }
     }
 
-    private static function fingerprint( WC_Product $product, array $config ): string {
+    public static function fingerprint( WC_Product $product, array $config ): string {
         return hash( 'sha256', wp_json_encode( array(
             'id'        => $product->get_id(),
             'sku'       => $product->get_sku(),
