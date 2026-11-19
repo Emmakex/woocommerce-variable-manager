@@ -19,7 +19,7 @@ by the infrastructure owner. Do not deploy this beta to production.
 
 ## Install/test from GitHub
 
-1. Download the `woocommerce-variable-manager-0.3.0-beta-staging` artifact from the
+1. Download the `woocommerce-variable-manager-0.4.0-beta-staging` artifact from the
    latest successful PR workflow and extract its inner ZIP.
 2. In staging WP: Plugins > Add Plugin > Upload the plugin ZIP.
 3. Enable WooCommerce, then Variable Manager. Leave the commercial theme and
@@ -28,6 +28,8 @@ by the infrastructure owner. Do not deploy this beta to production.
 5. Create a Simple product from Variable Manager > Productos y tarifas.
 6. Test one product with a base-price matrix, color/height/opening surcharges
    and a forbidden size+opening pair.
+7. Optional: run `wp wvm demo preview`, then `wp wvm demo seed --confirm-synthetic=YES` to insert eight **draft/hidden** synthetic products. After testing use `wp wvm demo purge --confirm-synthetic=YES` on that nonproduction site.
+8. No DNS/subdomain is needed to execute the CI synthetic suite. The temporary WordPress/MySQL site in GitHub Actions already tests the real WooCommerce CRUD and test fixture lifecycle.
 
 ## Acceptance cases (manual WooCommerce end-to-end)
 
@@ -45,6 +47,7 @@ by the infrastructure owner. Do not deploy this beta to production.
 - [ ] Test managed stock versus availability-only status and product-category assignment.
 - [ ] Confirm behavior without JavaScript and on mobile.
 - [ ] Confirm WooCommerce HPOS on a separate staging order test.
+- [ ] Confirm configurable product cards in archive link to product pages rather than adding without choices.
 - [ ] Confirm accessibility: keyboard selection, labels, contrast and live notices.
 - [ ] Verify noindex/access restrictions and that no emails or live payments were sent.
 
