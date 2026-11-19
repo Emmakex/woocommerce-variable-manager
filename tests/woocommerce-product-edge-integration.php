@@ -93,6 +93,25 @@ try {
     edge_assert( $persisted->get_sku() === 'SYN-EDGE-CANOPY-001', 'SKU preserved' );
     edge_assert( count( WVM_Products::configuration( $persisted )['prices'] ) === 3, 'all size prices persisted' );
 
+    // Saving a managed matrix must never silently remove a WooCommerce sale.
+    $persisted->set_sale_price( '150.00' );
+    $persisted->save();
+    $sale_protected = false;
+    try {
+        WVM_Products::apply( wc_get_product( $id ), $prepared );
+    } catch ( WC_Data_Exception $exception ) {
+        $sale_protected = 'wvm_sale_protected' === $exception->getErrorCode();
+    }
+    edge_assert( $sale_protected, 'product edit would silently erase an existing WooCommerce sale' );
+    edge_assert(
+        abs( (float) wc_get_product( $id )->get_sale_price( 'edit' ) - 150.00 ) < 0.001,
+        'failed matrix edit changed existing sale'
+    );
+    $persisted = wc_get_product( $id );
+    $persisted->set_sale_price( '' );
+    $persisted->save();
+
+
     // Duplicate SKU must fail in WooCommerce CRUD without creating a second product.
     $duplicate_rejected = false;
     try {
