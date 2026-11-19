@@ -51,12 +51,16 @@ final class WVM_Catalog {
         if ( '' !== $term ) {
             $sku_id = wc_get_product_id_by_sku( $term );
             $sku_product = $sku_id ? wc_get_product( $sku_id ) : null;
-            if ( $sku_product instanceof WC_Product_Simple &&
-                 in_array( $sku_product->get_status(), $statuses, true ) &&
-                 ( ! $managed || WVM_Products::is_managed( $sku_product ) ) ) {
+            // An exact SKU lookup always takes precedence over text search.
+            // If this SKU fails the selected status/managed filter, return no
+            // records; falling back to the broad search could expose a product
+            // that doesn't match the requested constraints.
+            if ( $sku_product instanceof WC_Product_Simple ) {
+                $matches = in_array( $sku_product->get_status(), $statuses, true ) &&
+                    ( ! $managed || WVM_Products::is_managed( $sku_product ) );
                 return (object) array(
-                    'products'      => 1 === $page ? array( $sku_product ) : array(),
-                    'total'         => 1,
+                    'products'      => $matches && 1 === $page ? array( $sku_product ) : array(),
+                    'total'         => $matches ? 1 : 0,
                     'max_num_pages' => 1,
                 );
             }
