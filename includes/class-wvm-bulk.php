@@ -134,6 +134,7 @@ final class WVM_Bulk {
                 return self::error( 'El SKU ' . $sku . ' tiene una configuración incompleta.' );
             }
             $after = $config['prices'];
+            $changes_here = 0;
             $sizes = $config['options']['size'];
             foreach ( $updated as $size => $price ) {
                 if ( ! in_array( (string) $size, $sizes, true ) ) {
@@ -146,10 +147,15 @@ final class WVM_Bulk {
                 $after[ $size ] = $value;
                 if ( abs( (float) $value - (float) $config['prices'][ $size ] ) > 0.000001 ) {
                     ++$changes;
+                    ++$changes_here;
                 }
             }
             if ( null === WVM_Pricing::validate_matrix( $sizes, array_keys( $after ), array_values( $after ) ) ) {
                 return self::error( 'La matriz final del SKU ' . $sku . ' no es válida.' );
+            }
+            // Do not save unchanged products: avoids excess WooCommerce hooks.
+            if ( 0 === $changes_here ) {
+                continue;
             }
             $plan[] = array(
                 'id'       => $id,
@@ -246,7 +252,8 @@ final class WVM_Bulk {
                 'orderby' => 'ID', 'order' => 'ASC',
             ) );
             foreach ( $products as $product ) {
-                if ( ! $product instanceof WC_Product_Simple || '' === $product->get_sku() ) {
+                if ( ! $product instanceof WC_Product_Simple || '' === $product->get_sku() ||
+                     '' !== $product->get_sale_price() ) {
                     continue;
                 }
                 $config = WVM_Products::configuration( $product );
