@@ -170,7 +170,8 @@ final class WVM_Quick_Edit {
         ) );
 
         $rendered = 0;
-        echo '<form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '" id="wvm-quick-form">';
+        echo '<form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) .
+            '" id="wvm-quick-form" data-wvm-decimals="' . esc_attr( (string) wc_get_price_decimals() ) . '">';
         echo '<input type="hidden" name="action" value="wvm_quick_save">';
         wp_nonce_field( 'wvm_quick_save', 'wvm_nonce' );
         echo '<div class="wvm-quick-table-wrap"><table class="widefat striped wvm-quick-table">';
@@ -209,9 +210,9 @@ final class WVM_Quick_Edit {
                     echo '</th>';
                 }
                 $base = 'wvm_price[' . (int) $product->get_id() . '][' . $pos . ']';
-                echo '<td>' . esc_html( $size ) . '</td>';
-                echo '<td>' . esc_html( wc_format_localized_price( $config['prices'][ $size ] ) ) . '</td>';
-                echo '<td>';
+                echo '<td data-label="Medida">' . esc_html( $size ) . '</td>';
+                echo '<td data-label="Precio actual">' . esc_html( wc_format_localized_price( $config['prices'][ $size ] ) ) . '</td>';
+                echo '<td data-label="Nuevo precio">';
                 if ( $editable ) {
                     echo '<input type="hidden" name="' . esc_attr( $base . '[size]' ) . '" value="' . esc_attr( $size ) . '">';
                     echo '<input class="wvm-quick-price" type="text" inputmode="decimal" autocomplete="off" required name="' .
