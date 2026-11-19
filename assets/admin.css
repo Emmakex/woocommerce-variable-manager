@@ -58,3 +58,10 @@
 .wvm-dashboard .wvm-stock-options h3 { margin-top: 0; }
 .wvm-dashboard .wvm-stock-options input[type="number"] { max-width: 160px; width: 100%; }
 .wvm-dashboard textarea[name="wvm_product_desc"] { max-width: 100%; resize: vertical; }
+
+.wvm-dashboard .wvm-bulk-card { max-width: 1080px; margin: 16px 0; }
+.wvm-dashboard .wvm-bulk-card > h2 { font-size: 18px; }
+.wvm-dashboard .wvm-bulk-card input[type="file"] { display: block; width: 100%; max-width: 520px; padding: 9px 0; }
+.wvm-dashboard .wvm-bulk-scroll { max-height: 420px; overflow: auto; border: 1px solid #ddd; border-radius: 6px; }
+.wvm-dashboard .wvm-bulk-scroll table { margin: 0; }
+.wvm-dashboard .wvm-bulk-scroll th { position: sticky; top: 0; background: #fff; }
