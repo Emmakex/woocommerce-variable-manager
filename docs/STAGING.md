@@ -19,7 +19,7 @@ by the infrastructure owner. Do not deploy this beta to production.
 
 ## Install/test from GitHub
 
-1. Download the `woocommerce-variable-manager-0.4.0-beta-staging` artifact from the
+1. Download the `woocommerce-variable-manager-0.5.0-beta-staging` artifact from the
    latest successful PR workflow and extract its inner ZIP.
 2. In staging WP: Plugins > Add Plugin > Upload the plugin ZIP.
 3. Enable WooCommerce, then Variable Manager. Leave the commercial theme and
@@ -28,14 +28,20 @@ by the infrastructure owner. Do not deploy this beta to production.
 5. Create a Simple product from Variable Manager > Productos y tarifas.
 6. Test one product with a base-price matrix, color/height/opening surcharges
    and a forbidden size+opening pair.
-7. Optional: run `wp wvm demo preview`, then `wp wvm demo seed --confirm-synthetic=YES` to insert eight **draft/hidden** synthetic products. After testing use `wp wvm demo purge --confirm-synthetic=YES` on that nonproduction site.
-8. No DNS/subdomain is needed to execute the CI synthetic suite. The temporary WordPress/MySQL site in GitHub Actions already tests the real WooCommerce CRUD and test fixture lifecycle.
+7. Open **Variable Manager → Importar / exportar**. Download the CSV of configured tariffs, modify one or more rows in a spreadsheet, upload and verify the preview. Confirm and verify that only the intended measure prices changed.
+8. Optional: run `wp wvm demo preview`, then `wp wvm demo seed --confirm-synthetic=YES` to insert eight **draft/hidden** synthetic products. After testing use `wp wvm demo purge --confirm-synthetic=YES` on that nonproduction site.
+9. No DNS/subdomain is needed to execute the CI synthetic suite. The temporary WordPress/MySQL site in GitHub Actions already tests the real WooCommerce CRUD and test fixture lifecycle.
 
 ## Acceptance cases (manual WooCommerce end-to-end)
 
 - [ ] Create/edit template from dashboard without Gutenberg or another editor.
 - [ ] Create new product with name, full/short description, image, categories, general stock, SKU and published/draft status.
 - [ ] Paste prices by size; verify correct amount is saved for each measure.
+- [ ] Export and re-import semicolon CSV using `sku;medida;precio`, preview changes before confirming.
+- [ ] CSV with one unknown SKU or measure rejects the **whole** import without partial writes.
+- [ ] CSV with duplicate SKU+measure rows or zero/negative prices is rejected.
+- [ ] Product modified after preview cancels the import on confirmation; a WooCommerce sale product is skipped/protected.
+- [ ] CSV import preserves option surcharges, product stock, images and order history.
 - [ ] Configure Beige/Gris and opening surcharges; compare online selection vs cart totals.
 - [ ] Invalid size + opening blocked by JS and PHP; direct crafted POST rejected.
 - [ ] Switching template in admin retains unsaved input during that page session.
@@ -67,7 +73,7 @@ owner verification; never store credentials in GitHub source files.
 
 - Parent stock and SKU only, not stock differentiated per option/measurement.
 - No multi-condition/quantity rules beyond pairwise excluded options.
-- Category creation, full gallery, promotions, full supplier CSV import and product-type
+- Category creation, full gallery, promotions, **full supplier product** CSV import and product-type
   conversions are not part of the current dashboard beta.
 - Store API/Cart & Checkout Blocks are intentionally out of scope pending dedicated tests.
 - Staging acceptance must precede any production release.
