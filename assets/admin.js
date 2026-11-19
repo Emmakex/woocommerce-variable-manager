@@ -44,7 +44,6 @@
                 inputPrice.inputMode = 'decimal';
                 inputPrice.autocomplete = 'off';
                 inputPrice.placeholder = '0,00';
-                inputPrice.required = true;
                 inputPrice.value = String(select.value) === originalTemplate && Object.prototype.hasOwnProperty.call(originalPrices, size)
                     ? String(originalPrices[size])
                     : '';
