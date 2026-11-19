@@ -1,6 +1,6 @@
 # WooCommerce Variable Manager
 
-**0.6.0-beta · © 2026 Eduardo Yauri**
+**0.7.0-beta · © 2026 Eduardo Yauri**
 
 See [LICENSE](LICENSE) for original-code rights. This public repository is used for CI and engineering; rights to WordPress, WooCommerce and other third-party components remain under their respective licenses.
 
@@ -13,6 +13,8 @@ A lightweight, independent plugin for mattresses, ottoman beds, bases and config
 **Variable Manager → Plantillas:** reusable sizes, colors, heights/thicknesses and opening options. Starter presets for mattresses and canapés. Active templates cannot have their options changed incompatibly while in use.
 
 **Variable Manager → Productos y tarifas:** create/search/edit simple WooCommerce products by name or exact SKU, and duplicate existing configured products as safe private drafts (no inherited SKU, stock quantity or sale price), including name, SKU, draft/publication status, full/short descriptions, category assignment, main image, general stock and availability. Link a template, edit final base prices for each size, paste semicolon-separated size/price rows from Excel and set nonnegative surcharges for colors, heights and openings. Block incompatible attribute *pairs* in a visual rule builder.
+
+**Variable Manager → Edición rápida:** find managed products by name or exact SKU and adjust the base price of several measurements across up to 10 products on one page. A sticky save bar shows a live changed-price count. Products with active WooCommerce sale prices are read-only. Save revalidates all sizes and prices, checks the product's original fingerprint and applies only changed rows through the same CRUD bulk service. Supports both comma and dot decimal formats, including products without SKUs.
 
 **Variable Manager → Importar / exportar:** download a CSV of existing managed product prices and upload edited prices for **up to 1,000 rows / 80 products** per batch. Upload creates an authenticated **preview without writes**; a second explicit confirmation applies changes. Only the selected size prices change; a full preflight rejects invalid SKUs/sizes, duplicate lines, incomplete configurations and products with WooCommerce sale prices. Concurrent changes between preview and apply cancel the import. Unchanged products are not saved. The importer restores prior prices on unexpected save failures on a best-effort basis, but cannot undo external WordPress hook side effects.
 
@@ -34,13 +36,14 @@ php tests/pricing-smoke.php
 php tests/rules-smoke.php
 php tests/synthetic-catalog.php
 php tests/bulk-smoke.php
+node --check assets/quick-edit.js
 node --check assets/admin.js
 node --check assets/storefront.js
 ```
 
 ### CI integration (disposable WordPress + real WooCommerce)
 
-GitHub Actions also installs WordPress, WooCommerce and a MySQL service **inside an ephemeral job** and runs [tests/woocommerce-integration.php](tests/woocommerce-integration.php) to exercise real CRUD, stored templates, price rules, cart data/order metadata and fail-closed checks. A separate [WooCommerce bulk integration test](tests/woocommerce-bulk-integration.php) checks two-product CSV imports, selective price changes, rule/stock preservation, conflict detection, sale protection and export roundtrip. [Catalog integration tests](tests/woocommerce-catalog-integration.php) cover exact SKU search and safe draft duplication of managed products. The seeded demo catalog is audited, seeded twice to check idempotence and then purged. A final check confirms that **demo seeding is refused when WP_ENVIRONMENT_TYPE=production**.
+GitHub Actions also installs WordPress, WooCommerce and a MySQL service **inside an ephemeral job** and runs [tests/woocommerce-integration.php](tests/woocommerce-integration.php) to exercise real CRUD, stored templates, price rules, cart data/order metadata and fail-closed checks. A separate [WooCommerce bulk integration test](tests/woocommerce-bulk-integration.php) checks two-product CSV imports, selective price changes, rule/stock preservation, conflict detection, sale protection and export roundtrip. [Catalog integration tests](tests/woocommerce-catalog-integration.php) cover exact SKU search and safe draft duplication of managed products. [Quick-editor integration tests](tests/woocommerce-quick-integration.php) verify multi-product edits (including products with no SKU), preservation of surcharges and stock, stale form rejection, invalid prices and sale protection. The seeded demo catalog is audited, seeded twice to check idempotence and then purged. A final check confirms that **demo seeding is refused when WP_ENVIRONMENT_TYPE=production**.
 
 The test environment is destroyed after the run. It does not need `colchones.kairoseth.com` and cannot change a real shop.
 
@@ -60,7 +63,7 @@ No demo products are ever created on plugin activation, by the admin dashboard o
 
 ## Installing for staging
 
-Requires PHP 8.1+, WordPress and active WooCommerce. Download the `woocommerce-variable-manager-0.6.0-beta-staging` artifact from the successful GitHub Actions workflow. Extract the plugin ZIP and upload it from WordPress → Plugins.
+Requires PHP 8.1+, WordPress and active WooCommerce. Download the `woocommerce-variable-manager-0.7.0-beta-staging` artifact from the successful GitHub Actions workflow. Extract the plugin ZIP and upload it from WordPress → Plugins.
 
 Open **Variable Manager** in the WP admin sidebar. The shop's theme must render classic WooCommerce product hooks; checkout blocks / Store API are **not yet certified**. For `colchones.kairoseth.com` setup and acceptance checks, see [docs/STAGING.md](docs/STAGING.md).
 
@@ -69,6 +72,7 @@ Open **Variable Manager** in the WP admin sidebar. The shop's theme must render 
 - `woocommerce-variable-manager.php` — bootstrapping and HPOS declaration.
 - `includes/class-wvm-dashboard.php` — plugin-owned admin forms and product flow.
 - `includes/class-wvm-catalog.php` — WooCommerce-backed name/SKU search and draft-only duplication.
+- `includes/class-wvm-quick-edit.php` — managed-only query and authenticated inline price grid, with optimistic concurrency.
 - `includes/class-wvm-templates.php` — internal reusable-option templates.
 - `includes/class-wvm-products.php` — validated product configuration using WooCommerce CRUD.
 - `includes/class-wvm-pricing.php` — strict per-size price matrix.
@@ -88,6 +92,10 @@ The manager handles **simple products** that use a single parent SKU/stock pool.
 
 **Do not install this draft PR in production before staging acceptance.**
 
-## 0.6.0-beta — faster catalog management
+## 0.7.0-beta — faster catalog management
 
 A product can be located by **exact SKU**, even if its title contains no such text. Normal product-title searches remain available. The **Duplicar borrador** action on a managed product creates a second *draft, hidden, out-of-stock* product with a blank SKU; pricing matrices, compatible option rules, text, category/image references, basic dimensions and tax/shipping classification are retained. Unmanaged products and products whose configurations are stale cannot be duplicated. No order or stock is copied. The original stays untouched. Test before use on staging.
+
+## 0.7.0-beta — inline catalog price grid
+
+Use **Variable Manager → Edición rápida** for everyday tariff corrections, without editing product fichas, exporting/importing CSV, or generating WooCommerce variations. Up to 10 managed simple products appear per page, with price inputs per size. The interface shows how many prices have changed, supports Spanish decimals, leaves sales discounted products in read-only mode, and validates all modified product matrices on the server. A concurrent change to the same product cancels the save rather than overwriting it. No pricing rules, inventory, SEO or customer orders are altered by the quick editor. **Save runs for a whole edited page; failed preflight rejects the batch.**
