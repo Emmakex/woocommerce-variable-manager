@@ -334,9 +334,6 @@ final class WVM_Dashboard {
                     self::redirect( 'wvm-templates', 'template_sizes_in_use', $id );
                 }
             }
-            if ( false ) {
-                self::redirect( 'wvm-templates', 'template_sizes_in_use', $id );
-            }
         }
         $data = array( 'post_title' => $name, 'post_type' => 'wvm_template', 'post_status' => 'publish' );
         if ( $id ) {
