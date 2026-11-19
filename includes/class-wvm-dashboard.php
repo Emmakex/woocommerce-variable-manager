@@ -55,10 +55,15 @@ final class WVM_Dashboard {
             $templates[ (string) $template->ID ] = WVM_Templates::active_options( (int) $template->ID );
         }
         $matrix = $product instanceof WC_Product_Simple ? $product->get_meta( WVM_Products::MATRIX_META, true ) : array();
+        $surcharges = $product instanceof WC_Product_Simple ? $product->get_meta( WVM_Rules::SURCHARGES_META, true ) : array();
+        $exclusions = $product instanceof WC_Product_Simple ? $product->get_meta( WVM_Rules::EXCLUSIONS_META, true ) : array();
         wp_enqueue_script( 'wvm-admin', WVM_URL . 'assets/admin.js', array(), WVM_VERSION, true );
         wp_localize_script( 'wvm-admin', 'wvmAdminData', array(
             'templates'   => $templates,
-            'savedPrices' => is_array( $matrix ) ? $matrix : array(),
+            'savedPrices'     => is_array( $matrix ) ? $matrix : array(),
+            'savedSurcharges' => is_array( $surcharges ) ? $surcharges : array(),
+            'savedExclusions' => is_array( $exclusions ) ? $exclusions : array(),
+            'labels'          => WVM_Templates::ATTRIBUTES,
         ) );
     }
 
@@ -86,7 +91,8 @@ final class WVM_Dashboard {
             'template_saved'        => array( 'success', 'Plantilla guardada.' ),
             'product_saved'         => array( 'success', 'Producto y matriz de precios guardados.' ),
             'invalid_template'      => array( 'error', 'Introduce un nombre y al menos una medida válida.' ),
-            'template_sizes_in_use' => array( 'error', 'No puedes cambiar las medidas de una plantilla en uso. Duplica la plantilla y asigna los nuevos precios para evitar ventas erróneas.' ),
+            'template_sizes_in_use' => array( 'error', 'Una plantilla asignada a productos no puede cambiar sus opciones. Duplica la plantilla y configura los nuevos precios para evitar errores.' ),
+            'invalid_rules'         => array( 'error', 'Revisa suplementos e incompatibilidades. No se ha guardado el producto.' ),
             'invalid_product'       => array( 'error', 'Revisa el nombre, la plantilla y los precios de todas las medidas.' ),
             'save_error'            => array( 'error', 'No se ha podido guardar. Revisa si el SKU ya existe y vuelve a intentarlo.' ),
         );
@@ -267,7 +273,14 @@ final class WVM_Dashboard {
         echo '<p class="description">Una medida y precio por línea, separados por punto y coma. Ejemplo: <code>90x190;299,99</code></p>';
         echo '<textarea id="wvm_bulk_prices" class="large-text code" rows="5" placeholder="90x190;299,99&#10;135x190;384,50"></textarea>';
         echo '<p><button type="button" class="button" id="wvm_apply_bulk">Aplicar a la matriz</button> <span id="wvm_bulk_status" role="status" aria-live="polite"></span></p></details>';
-        echo '<p class="description">Color, altura y apertura son opciones sin recargo en esta beta. Stock y SKU se controlan por producto, no por medida.</p>';
+        echo '<h3>Suplementos por opción</h3>';
+        echo '<p class="description">Importes adicionales para cada color, altura o apertura. Introduce cero si no tiene suplemento. El precio final será medida + suplementos seleccionados.</p>';
+        echo '<table class="widefat striped wvm-extras"><thead><tr><th>Opción</th><th>Suplemento (' . esc_html( get_woocommerce_currency_symbol() ) . ')</th></tr></thead><tbody id="wvm-surcharge-rows"></tbody></table>';
+        echo '<h3>Compatibilidades</h3>';
+        echo '<p class="description">Bloquea pares imposibles. Ejemplo: medida 90x190 no disponible con apertura lateral.</p>';
+        echo '<div id="wvm-exclusion-rows"></div><p><button class="button" id="wvm-add-exclusion" type="button">Añadir incompatibilidad</button></p>';
+        echo '<input type="hidden" name="wvm_rules_ready" id="wvm_rules_ready" value="0">';
+        echo '<p class="description">Stock y SKU se controlan por producto. Los campos no cambian nada en WooCommerce hasta pulsar Guardar.</p>';
         submit_button( $product ? 'Guardar producto y tarifas' : 'Crear producto', 'primary', 'submit', false );
         echo '</form></section></div></div>';
     }
@@ -311,11 +324,17 @@ final class WVM_Dashboard {
             self::redirect( 'wvm-templates', 'invalid_template', $id );
         }
         if ( $id && WVM_Templates::is_in_use( $id ) ) {
-            $before = WVM_Templates::options( $id )['size'] ?? array();
-            $after = $options['size'];
-            sort( $before );
-            sort( $after );
-            if ( $before !== $after ) {
+            $old_options = WVM_Templates::options( $id );
+            foreach ( WVM_Templates::ATTRIBUTES as $attr => $label ) {
+                $before = $old_options[ $attr ] ?? array();
+                $after  = $options[ $attr ] ?? array();
+                sort( $before );
+                sort( $after );
+                if ( $before !== $after ) {
+                    self::redirect( 'wvm-templates', 'template_sizes_in_use', $id );
+                }
+            }
+            if ( false ) {
                 self::redirect( 'wvm-templates', 'template_sizes_in_use', $id );
             }
         }
@@ -353,11 +372,29 @@ final class WVM_Dashboard {
         if ( $image_id && ! wp_attachment_is_image( $image_id ) ) {
             self::redirect( 'wvm-products', 'invalid_product', $id );
         }
+        if ( ! isset( $_POST['wvm_rules_ready'] ) || '1' !== $_POST['wvm_rules_ready'] ) {
+            self::redirect( 'wvm-products', 'invalid_rules', $id );
+        }
         $prepared = WVM_Products::prepare(
-            $template_id, self::posted_array( 'wvm_matrix_sizes' ), self::posted_array( 'wvm_matrix_prices' )
+            $template_id,
+            self::posted_array( 'wvm_matrix_sizes' ), self::posted_array( 'wvm_matrix_prices' ),
+            array(
+                'attr'   => self::posted_array( 'wvm_extra_attr' ),
+                'value'  => self::posted_array( 'wvm_extra_value' ),
+                'amount' => self::posted_array( 'wvm_extra_amount' ),
+            ),
+            array(
+                'a_attr'  => self::posted_array( 'wvm_rule_a_attr' ),
+                'a_value' => self::posted_array( 'wvm_rule_a_value' ),
+                'b_attr'  => self::posted_array( 'wvm_rule_b_attr' ),
+                'b_value' => self::posted_array( 'wvm_rule_b_value' ),
+            )
         );
+        if ( is_wp_error( $prepared ) ) {
+            self::redirect( 'wvm-products', in_array( $prepared->get_error_code(), array( 'wvm_rules' ), true ) ? 'invalid_rules' : 'invalid_product', $id );
+        }
         if ( '' === trim( $name ) || strlen( $name ) > 200 ||
-             ! in_array( $status, array( 'draft', 'publish' ), true ) || is_wp_error( $prepared ) ) {
+             ! in_array( $status, array( 'draft', 'publish' ), true ) ) {
             self::redirect( 'wvm-products', 'invalid_product', $id );
         }
         try {
