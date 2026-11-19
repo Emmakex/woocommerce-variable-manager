@@ -1,0 +1,6 @@
+#wvm_matrix_panel .wvm-matrix-wrap { padding: 12px 16px 20px; }
+#wvm_matrix_panel .wvm-matrix-wrap > p { margin: 10px 0; }
+#wvm_matrix_panel table { max-width: 650px; }
+#wvm_matrix_panel th:first-child { width: 55%; }
+#wvm_matrix_panel input[name="wvm_matrix_prices[]"] { width: 100%; max-width: 170px; min-height: 36px; }
+#wvm_matrix_panel .description { max-width: 690px; }
