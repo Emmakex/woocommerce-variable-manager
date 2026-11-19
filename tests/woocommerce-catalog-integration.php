@@ -100,6 +100,21 @@ try {
     $unmanaged_id = $unmanaged->save();
     catalog_check( is_wp_error( WVM_Catalog::duplicate( $unmanaged_id ) ), 'unmanaged source rejected' );
 
+    catalog_check( WVM_Catalog::allowed_status( 'unexpected' ) === 'all', 'invalid status sanitized' );
+    $managedList = WVM_Catalog::search( '', 1, array( 'managed' => true, 'per_page' => 20 ) );
+    $managedIds = array_map( static fn( WC_Product $item ): int => $item->get_id(), $managedList->products );
+    catalog_check( in_array( $original_id, $managedIds, true ), 'published managed source appears in filtered list' );
+    catalog_check( in_array( $duplicate_id, $managedIds, true ), 'draft clone appears in managed list' );
+    catalog_check( ! in_array( $unmanaged_id, $managedIds, true ), 'unmanaged WooCommerce product excluded from managed list' );
+    $published = WVM_Catalog::search( 'SYN-CATALOG-CLI-001', 1, array( 'managed' => true, 'status' => 'publish' ) );
+    catalog_check( count( $published->products ) === 1 && $published->products[0]->get_id() === $original_id, 'published SKU/status match' );
+    $draftSku = WVM_Catalog::search( 'SYN-CATALOG-CLI-001', 1, array( 'managed' => true, 'status' => 'draft' ) );
+    catalog_check( empty( $draftSku->products ), 'published SKU incorrectly matched draft filter' );
+    $draftProducts = WVM_Catalog::search( '', 1, array( 'managed' => true, 'status' => 'draft' ) );
+    $draftIds = array_map( static fn( WC_Product $item ): int => $item->get_id(), $draftProducts->products );
+    catalog_check( in_array( $duplicate_id, $draftIds, true ) && ! in_array( $original_id, $draftIds, true ), 'managed draft filter' );
+
+
     $sourceNow->update_meta_data( WVM_Rules::SURCHARGES_META, array( 'color' => array( 'Color no disponible' => '12' ) ) );
     $sourceNow->save();
     catalog_check( is_wp_error( WVM_Catalog::duplicate( (int) $original_id ) ), 'tampered source rejected' );
