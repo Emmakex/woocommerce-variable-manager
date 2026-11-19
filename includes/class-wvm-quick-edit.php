@@ -43,7 +43,9 @@ final class WVM_Quick_Edit {
         if ( ! is_string( $raw ) || ! preg_match( '/^\d{1,9}([.,]\d{1,4})?$/D', trim( $raw ) ) ) {
             return null;
         }
-        $formatted = wc_format_decimal( trim( $raw ), wc_get_price_decimals() );
+        // CSV importer already normalizes decimal commas. Do the same here
+        // instead of relying on the store's display locale.
+        $formatted = wc_format_decimal( str_replace( ',', '.', trim( $raw ) ), wc_get_price_decimals() );
         return is_numeric( $formatted ) && (float) $formatted > 0 ? (string) $formatted : null;
     }
 
