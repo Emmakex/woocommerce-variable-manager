@@ -127,9 +127,19 @@ try {
         'wvm_thickness' => '35 cm',
         'wvm_opening'   => 'Lateral',
     );
-    $rejected_key = WC()->cart->add_to_cart( (int) $product_id, 1 );
-    integration_assert( false === $rejected_key, 'Forbidden size/opening was added via real WooCommerce cart' );
-    integration_assert( count( WC()->cart->get_cart() ) === 2, 'Invalid cart attempt modified valid lines' );
+    integration_assert(
+        ! WVM_Storefront::validate_add( true, (int) $product_id, 1 ),
+        'Classic add-to-cart validation accepted a forbidden option pair'
+    );
+    // The low-level WooCommerce API may return a cart key even though our
+    // defense-in-depth insertion hook removes the invalid item immediately.
+    WC()->cart->add_to_cart( (int) $product_id, 1 );
+    integration_assert(
+        count( WC()->cart->get_cart() ) === 2,
+        'Programmatic invalid insertion was not immediately removed'
+    );
+    WC()->cart->calculate_totals();
+    integration_assert( count( WC()->cart->get_cart() ) === 2, 'Invalid cart survived totals calculation' );
     WC()->cart->empty_cart();
     $orderItem = new WC_Order_Item_Product();
     WVM_Storefront::order_meta( $orderItem, 'synthetic', $cartData, new WC_Order() );
