@@ -27,6 +27,7 @@ final class WVM_Dashboard {
         add_submenu_page( 'wvm-dashboard', 'Plantillas', 'Plantillas', self::CAPABILITY, 'wvm-templates', array( __CLASS__, 'templates_page' ) );
         add_submenu_page( 'wvm-dashboard', 'Productos y tarifas', 'Productos y tarifas', self::CAPABILITY, 'wvm-products', array( __CLASS__, 'products_page' ) );
         add_submenu_page( 'wvm-dashboard', 'Importar / exportar', 'Importar / exportar', self::CAPABILITY, 'wvm-bulk', array( 'WVM_Bulk_Admin', 'render' ) );
+        add_submenu_page( 'wvm-dashboard', 'Edición rápida', 'Edición rápida', self::CAPABILITY, 'wvm-quick', array( 'WVM_Quick_Edit', 'render' ) );
     }
 
     private static function url( string $page, array $extra = array() ): string {
@@ -42,10 +43,14 @@ final class WVM_Dashboard {
     public static function assets(): void {
         $page = isset( $_GET['page'] ) && is_string( $_GET['page'] )
             ? sanitize_key( wp_unslash( $_GET['page'] ) ) : '';
-        if ( ! in_array( $page, array( 'wvm-dashboard', 'wvm-templates', 'wvm-products', 'wvm-bulk' ), true ) ) {
+        if ( ! in_array( $page, array( 'wvm-dashboard', 'wvm-templates', 'wvm-products', 'wvm-bulk', 'wvm-quick' ), true ) ) {
             return;
         }
         wp_enqueue_style( 'wvm-admin', WVM_URL . 'assets/admin.css', array(), WVM_VERSION );
+        if ( 'wvm-quick' === $page ) {
+            wp_enqueue_script( 'wvm-quick-edit', WVM_URL . 'assets/quick-edit.js', array(), WVM_VERSION, true );
+            return;
+        }
         if ( 'wvm-products' !== $page ) {
             return;
         }
@@ -79,6 +84,7 @@ final class WVM_Dashboard {
             'wvm-templates' => 'Plantillas',
             'wvm-products'  => 'Productos y tarifas',
             'wvm-bulk'      => 'Importar / exportar',
+            'wvm-quick'     => 'Edición rápida',
         ) as $page => $label ) {
             $class = $active === $page ? 'nav-tab nav-tab-active' : 'nav-tab';
             echo '<a class="' . esc_attr( $class ) . '" href="' . esc_url( self::url( $page ) ) . '">' . esc_html( $label ) . '</a>';
@@ -94,6 +100,9 @@ final class WVM_Dashboard {
             'template_saved'        => array( 'success', 'Plantilla guardada.' ),
             'product_saved'         => array( 'success', 'Producto y matriz de precios guardados.' ),
             'product_duplicated'    => array( 'success', 'Borrador duplicado: revisa su SKU, stock y visibilidad antes de publicar.' ),
+            'quick_saved'           => array( 'success', 'Tarifas actualizadas. Se han conservado suplementos, reglas e inventario.' ),
+            'quick_unchanged'       => array( 'success', 'No hay cambios de precio que guardar.' ),
+            'quick_error'           => array( 'error', 'No se han actualizado las tarifas. Comprueba los importes y recarga la página si otro administrador ha realizado cambios.' ),
             'duplicate_failed'      => array( 'error', 'No se pudo duplicar este producto. Comprueba que su configuración siga siendo válida.' ),
             'invalid_template'      => array( 'error', 'Introduce un nombre y al menos una medida válida.' ),
             'template_sizes_in_use' => array( 'error', 'Una plantilla asignada a productos no puede cambiar sus opciones. Duplica la plantilla y configura los nuevos precios para evitar errores.' ),
