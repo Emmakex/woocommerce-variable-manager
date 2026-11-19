@@ -1,0 +1,120 @@
+name: Variable Manager CI
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  syntax-and-pricing:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.1'
+          coverage: none
+      - name: PHP syntax
+        run: find . -type f -name '*.php' -print0 | xargs -0 -n1 php -l
+      - name: Price matrix smoke tests
+        run: php tests/pricing-smoke.php
+      - name: Rule engine smoke tests
+        run: php tests/rules-smoke.php
+      - name: Synthetic catalog matrix
+        run: php tests/synthetic-catalog.php
+      - name: CSV parser smoke tests
+        run: php tests/bulk-smoke.php
+      - name: JavaScript syntax
+        run: |
+          node --check assets/admin.js
+          node --check assets/storefront.js
+          node --check assets/quick-edit.js
+      - name: Quick edit UI behavior
+        run: node tests/quick-edit-ui.cjs
+      - name: Package staging installer
+        run: |
+          mkdir -p dist/woocommerce-variable-manager
+          cp -R includes assets woocommerce-variable-manager.php README.md LICENSE dist/woocommerce-variable-manager/
+          mkdir -p dist/woocommerce-variable-manager/tests
+          cp -R tests/fixtures dist/woocommerce-variable-manager/tests/
+          cd dist
+          zip -qr ../woocommerce-variable-manager-0.9.0-beta.zip woocommerce-variable-manager
+      - name: Upload staging installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: woocommerce-variable-manager-0.9.0-beta-staging
+          path: woocommerce-variable-manager-0.9.0-beta.zip
+          retention-days: 7
+
+  ephemeral-woocommerce:
+    name: Real WordPress + WooCommerce / synthetic data
+    runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: rootpass-ci-only
+          MYSQL_DATABASE: wvm_ci
+          MYSQL_USER: wvm_ci
+          MYSQL_PASSWORD: wvm-ci-pass
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h localhost -prootpass-ci-only"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: mysqli, mbstring, curl, zip, gd
+          coverage: none
+      - name: Install WordPress CLI
+        run: |
+          curl -fsSL https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar -o /tmp/wp-cli.phar
+          chmod +x /tmp/wp-cli.phar
+          sudo mv /tmp/wp-cli.phar /usr/local/bin/wp
+          wp --info
+      - name: Create disposable WordPress and install WooCommerce
+        env:
+          WP_PATH: ${{ runner.temp }}/wvm-wordpress
+        run: |
+          mkdir -p "$WP_PATH"
+          wp core download --path="$WP_PATH" --quiet
+          wp config create --path="$WP_PATH" --dbname=wvm_ci --dbuser=wvm_ci --dbpass=wvm-ci-pass --dbhost=127.0.0.1:3306 --quiet
+          wp config set WP_ENVIRONMENT_TYPE development --type=constant --path="$WP_PATH"
+          wp core install --path="$WP_PATH" --url=http://localhost --title=WVM-CI --admin_user=wvmadmin --admin_password=wvm-ci-only-password --admin_email=test@example.invalid --skip-email --quiet
+          wp plugin install woocommerce --activate --path="$WP_PATH" --quiet
+          mkdir -p "$WP_PATH/wp-content/plugins/woocommerce-variable-manager"
+          cp -R includes assets tests woocommerce-variable-manager.php "$WP_PATH/wp-content/plugins/woocommerce-variable-manager/"
+          wp plugin activate woocommerce-variable-manager --path="$WP_PATH"
+      - name: Validate real WooCommerce CRUD and synthetic demo lifecycle
+        env:
+          WP_PATH: ${{ runner.temp }}/wvm-wordpress
+        run: |
+          wp eval-file "$GITHUB_WORKSPACE/tests/woocommerce-integration.php" --path="$WP_PATH"
+          wp eval-file "$GITHUB_WORKSPACE/tests/woocommerce-bulk-integration.php" --path="$WP_PATH"
+          wp eval-file "$GITHUB_WORKSPACE/tests/woocommerce-catalog-integration.php" --path="$WP_PATH"
+          wp eval-file "$GITHUB_WORKSPACE/tests/woocommerce-quick-integration.php" --path="$WP_PATH"
+          wp eval-file "$GITHUB_WORKSPACE/tests/woocommerce-checkout-integration.php" --path="$WP_PATH"
+          wp eval-file "$GITHUB_WORKSPACE/tests/woocommerce-product-edge-integration.php" --path="$WP_PATH"
+          wp wvm demo preview --path="$WP_PATH"
+          wp wvm demo seed --confirm-synthetic=YES --path="$WP_PATH"
+          WVM_EXPECT_DEMO=8 wp eval-file "$GITHUB_WORKSPACE/tests/demo-audit.php" --path="$WP_PATH"
+          wp wvm demo seed --confirm-synthetic=YES --path="$WP_PATH"
+          WVM_EXPECT_DEMO=8 wp eval-file "$GITHUB_WORKSPACE/tests/demo-audit.php" --path="$WP_PATH"
+          wp wvm demo purge --confirm-synthetic=YES --path="$WP_PATH"
+          WVM_EXPECT_DEMO=0 wp eval-file "$GITHUB_WORKSPACE/tests/demo-audit.php" --path="$WP_PATH"
+          wp config set WP_ENVIRONMENT_TYPE production --type=constant --path="$WP_PATH"
+          if wp wvm demo seed --confirm-synthetic=YES --path="$WP_PATH"; then
+            echo "ERROR: production synthetic seed must be refused"
+            exit 1
+          fi
+          echo "Production seed guard PASS"

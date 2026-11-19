@@ -1,0 +1,400 @@
+{
+  "version": 1,
+  "description": "Fictional mattresses and furniture, development testing only. No real inventory, brands or orders.",
+  "currency": "EUR",
+  "products": [
+    {
+      "sku": "SYN-MAT-VISCO",
+      "name": "Colchón Visco Nube (sintético)",
+      "family": "colchon",
+      "options": {
+        "size": [
+          "90x190",
+          "135x190",
+          "150x200"
+        ],
+        "color": [],
+        "thickness": [
+          "25 cm",
+          "30 cm"
+        ],
+        "opening": []
+      },
+      "matrix": {
+        "90x190": "189.90",
+        "135x190": "259.90",
+        "150x200": "319.90"
+      },
+      "surcharges": {
+        "thickness": {
+          "25 cm": "0",
+          "30 cm": "40.00"
+        }
+      },
+      "exclusions": [],
+      "sample": {
+        "selection": {
+          "size": "135x190",
+          "thickness": "30 cm"
+        },
+        "expected_total": "299.90"
+      }
+    },
+    {
+      "sku": "SYN-MAT-MUELLES",
+      "name": "Colchón Muelles Orión (sintético)",
+      "family": "colchon",
+      "options": {
+        "size": [
+          "90x190",
+          "150x190",
+          "180x200"
+        ],
+        "color": [],
+        "thickness": [
+          "24 cm",
+          "28 cm"
+        ],
+        "opening": []
+      },
+      "matrix": {
+        "90x190": "249.00",
+        "150x190": "379.00",
+        "180x200": "529.00"
+      },
+      "surcharges": {
+        "thickness": {
+          "24 cm": "0",
+          "28 cm": "55"
+        }
+      },
+      "exclusions": [],
+      "sample": {
+        "selection": {
+          "size": "180x200",
+          "thickness": "28 cm"
+        },
+        "expected_total": "584.00"
+      }
+    },
+    {
+      "sku": "SYN-MAT-JUNIOR",
+      "name": "Colchón Junior (sintético)",
+      "family": "colchon",
+      "options": {
+        "size": [
+          "80x180",
+          "90x190"
+        ],
+        "color": [],
+        "thickness": [
+          "16 cm",
+          "20 cm"
+        ],
+        "opening": []
+      },
+      "matrix": {
+        "80x180": "99.00",
+        "90x190": "129.00"
+      },
+      "surcharges": {
+        "thickness": {
+          "16 cm": "0",
+          "20 cm": "20"
+        }
+      },
+      "exclusions": [
+        {
+          "a_attr": "size",
+          "a_value": "80x180",
+          "b_attr": "thickness",
+          "b_value": "20 cm"
+        }
+      ],
+      "sample": {
+        "selection": {
+          "size": "90x190",
+          "thickness": "20 cm"
+        },
+        "expected_total": "149.00"
+      },
+      "blocked": {
+        "size": "80x180",
+        "thickness": "20 cm"
+      }
+    },
+    {
+      "sku": "SYN-CAN-MADERA",
+      "name": "Canapé Madera Alto (sintético)",
+      "family": "canape",
+      "options": {
+        "size": [
+          "90x190",
+          "135x190",
+          "150x200"
+        ],
+        "color": [
+          "Blanco",
+          "Roble"
+        ],
+        "thickness": [],
+        "opening": [
+          "Frontal",
+          "Lateral"
+        ]
+      },
+      "matrix": {
+        "90x190": "299.00",
+        "135x190": "389.00",
+        "150x200": "469.00"
+      },
+      "surcharges": {
+        "color": {
+          "Blanco": "0",
+          "Roble": "35"
+        },
+        "opening": {
+          "Frontal": "0",
+          "Lateral": "50"
+        }
+      },
+      "exclusions": [
+        {
+          "a_attr": "size",
+          "a_value": "90x190",
+          "b_attr": "opening",
+          "b_value": "Lateral"
+        }
+      ],
+      "sample": {
+        "selection": {
+          "size": "135x190",
+          "color": "Roble",
+          "opening": "Lateral"
+        },
+        "expected_total": "474.00"
+      },
+      "blocked": {
+        "size": "90x190",
+        "color": "Roble",
+        "opening": "Lateral"
+      }
+    },
+    {
+      "sku": "SYN-CAN-TAPIZADO",
+      "name": "Canapé Tapizado Élite (sintético)",
+      "family": "canape",
+      "options": {
+        "size": [
+          "90x190",
+          "135x190",
+          "150x190",
+          "180x200"
+        ],
+        "color": [
+          "Beige",
+          "Gris",
+          "Antracita"
+        ],
+        "thickness": [
+          "30 cm",
+          "35 cm"
+        ],
+        "opening": [
+          "Frontal",
+          "Lateral"
+        ]
+      },
+      "matrix": {
+        "90x190": "329.90",
+        "135x190": "399.90",
+        "150x190": "439.90",
+        "180x200": "559.90"
+      },
+      "surcharges": {
+        "color": {
+          "Beige": "0",
+          "Gris": "12",
+          "Antracita": "25"
+        },
+        "thickness": {
+          "30 cm": "0",
+          "35 cm": "39.90"
+        },
+        "opening": {
+          "Frontal": "0",
+          "Lateral": "75"
+        }
+      },
+      "exclusions": [
+        {
+          "a_attr": "size",
+          "a_value": "90x190",
+          "b_attr": "opening",
+          "b_value": "Lateral"
+        },
+        {
+          "a_attr": "size",
+          "a_value": "180x200",
+          "b_attr": "thickness",
+          "b_value": "30 cm"
+        }
+      ],
+      "sample": {
+        "selection": {
+          "size": "150x190",
+          "color": "Antracita",
+          "thickness": "35 cm",
+          "opening": "Lateral"
+        },
+        "expected_total": "579.80"
+      },
+      "blocked": {
+        "size": "90x190",
+        "color": "Beige",
+        "thickness": "35 cm",
+        "opening": "Lateral"
+      }
+    },
+    {
+      "sku": "SYN-BASE-TAPIZADA",
+      "name": "Base Tapizada Compacta (sintético)",
+      "family": "base",
+      "options": {
+        "size": [
+          "90x190",
+          "135x190",
+          "150x200"
+        ],
+        "color": [
+          "Gris",
+          "Negro"
+        ],
+        "thickness": [],
+        "opening": []
+      },
+      "matrix": {
+        "90x190": "149.00",
+        "135x190": "195.00",
+        "150x200": "239.00"
+      },
+      "surcharges": {
+        "color": {
+          "Gris": "0",
+          "Negro": "15"
+        }
+      },
+      "exclusions": [],
+      "sample": {
+        "selection": {
+          "size": "135x190",
+          "color": "Negro"
+        },
+        "expected_total": "210.00"
+      }
+    },
+    {
+      "sku": "SYN-CAB-LINO",
+      "name": "Cabecero Lino (sintético)",
+      "family": "cabecero",
+      "options": {
+        "size": [
+          "135x120",
+          "150x120",
+          "160x120"
+        ],
+        "color": [
+          "Beige",
+          "Negro"
+        ],
+        "thickness": [],
+        "opening": []
+      },
+      "matrix": {
+        "135x120": "129.00",
+        "150x120": "149.00",
+        "160x120": "169.00"
+      },
+      "surcharges": {
+        "color": {
+          "Beige": "0",
+          "Negro": "20"
+        }
+      },
+      "exclusions": [],
+      "sample": {
+        "selection": {
+          "size": "150x120",
+          "color": "Negro"
+        },
+        "expected_total": "169.00"
+      }
+    },
+    {
+      "sku": "SYN-PACK-DESCANSO",
+      "name": "Pack Colchón + Canapé (sintético)",
+      "family": "pack",
+      "options": {
+        "size": [
+          "90x190",
+          "135x190",
+          "150x200"
+        ],
+        "color": [
+          "Beige",
+          "Gris"
+        ],
+        "thickness": [
+          "25 cm",
+          "30 cm"
+        ],
+        "opening": [
+          "Frontal",
+          "Lateral"
+        ]
+      },
+      "matrix": {
+        "90x190": "449.00",
+        "135x190": "619.00",
+        "150x200": "759.00"
+      },
+      "surcharges": {
+        "color": {
+          "Beige": "0",
+          "Gris": "10"
+        },
+        "thickness": {
+          "25 cm": "0",
+          "30 cm": "45"
+        },
+        "opening": {
+          "Frontal": "0",
+          "Lateral": "65"
+        }
+      },
+      "exclusions": [
+        {
+          "a_attr": "size",
+          "a_value": "90x190",
+          "b_attr": "opening",
+          "b_value": "Lateral"
+        }
+      ],
+      "sample": {
+        "selection": {
+          "size": "150x200",
+          "color": "Gris",
+          "thickness": "30 cm",
+          "opening": "Lateral"
+        },
+        "expected_total": "879.00"
+      },
+      "blocked": {
+        "size": "90x190",
+        "color": "Gris",
+        "thickness": "25 cm",
+        "opening": "Lateral"
+      }
+    }
+  ]
+}
