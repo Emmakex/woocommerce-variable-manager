@@ -42,3 +42,11 @@
 .wvm-dashboard #wvm_image_preview:not([hidden]) { display: block; max-width: 150px; width: auto; height: auto; border-radius: 5px; }
 .wvm-dashboard #wvm_image_preview[hidden] { display: none; }
 .wvm-dashboard .wvm-image-field button { margin: 0 6px 0 0; }
+
+/* Reusable price extras and pairwise compatibility editor. */
+.wvm-dashboard .wvm-extras input[name="wvm_extra_amount[]"] { width: 100%; max-width: 150px; min-height: 38px; }
+.wvm-dashboard .wvm-rule-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 12px; border: 1px solid #dcdcde; border-radius: 8px; margin: 10px 0; background: #f7f8f9; }
+.wvm-dashboard .wvm-rule-row select { flex: 1 1 135px; min-width: 130px; max-width: 210px; }
+.wvm-dashboard .wvm-rule-row span { font-size: 12px; color: #50575e; }
+.wvm-dashboard .wvm-rule-row button { flex: 0 0 auto; padding: 6px; cursor: pointer; }
+@media (max-width:782px) { .wvm-dashboard .wvm-rule-row select { flex-basis: 46%; max-width: none; } }
