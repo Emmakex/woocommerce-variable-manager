@@ -68,7 +68,7 @@ final class WVM_Templates {
             $values = array_map( 'trim', explode( ',', $input ) );
             $values = array_map( 'sanitize_text_field', $values );
             $values = array_filter( $values, static function ( string $value ): bool {
-                return '' !== $value && mb_strlen( $value ) <= 80;
+                return '' !== $value && strlen( $value ) <= 200;
             } );
             $clean[ $key ] = array_slice( array_values( array_unique( $values ) ), 0, 40 );
         }
@@ -88,12 +88,8 @@ final class WVM_Templates {
     }
 
     public static function options( int $template_id ): array {
-        if ( 'wvm_template' !== get_post_type( $template_id ) || 'publish' !== get_post_status( $template_id ) ) {
-            // Drafts may be edited in the template editor, but are not eligible for products.
-            $post = get_post( $template_id );
-            if ( ! $post || 'edit' !== ( get_current_screen() ? get_current_screen()->base : '' ) || ! current_user_can( 'edit_post', $template_id ) ) {
-                return array();
-            }
+        if ( 'wvm_template' !== get_post_type( $template_id ) ) {
+            return array();
         }
         $raw = get_post_meta( $template_id, self::META_KEY, true );
         if ( ! is_array( $raw ) ) {
