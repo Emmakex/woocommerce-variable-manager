@@ -2,7 +2,7 @@
 /**
  * Plugin Name: WooCommerce Variable Manager
  * Description: Reusable sleep-product templates and simple, safe size-based price matrices for WooCommerce.
- * Version: 0.1.0
+ * Version: 0.2.0-beta
  * Author: Eduardo Yauri
  * License: Proprietary - see LICENSE (third-party components retain their own licenses)
  * Requires PHP: 8.1
@@ -12,7 +12,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'WVM_VERSION', '0.1.0' );
+define( 'WVM_VERSION', '0.2.0-beta' );
 define( 'WVM_PATH', plugin_dir_path( __FILE__ ) );
 define( 'WVM_URL', plugin_dir_url( __FILE__ ) );
 
@@ -38,8 +38,9 @@ add_action( 'plugins_loaded', static function (): void {
     require_once WVM_PATH . 'includes/class-wvm-pricing.php';
     require_once WVM_PATH . 'includes/class-wvm-products.php';
     require_once WVM_PATH . 'includes/class-wvm-storefront.php';
+    require_once WVM_PATH . 'includes/class-wvm-dashboard.php';
 
     WVM_Templates::init();
-    WVM_Products::init();
+    WVM_Dashboard::init();
     WVM_Storefront::init();
 } );
