@@ -33,6 +33,8 @@ jobs:
           node --check assets/admin.js
           node --check assets/storefront.js
           node --check assets/quick-edit.js
+      - name: Quick edit UI behavior
+        run: node tests/quick-edit-ui.cjs
       - name: Package staging installer
         run: |
           mkdir -p dist/woocommerce-variable-manager
@@ -40,12 +42,12 @@ jobs:
           mkdir -p dist/woocommerce-variable-manager/tests
           cp -R tests/fixtures dist/woocommerce-variable-manager/tests/
           cd dist
-          zip -qr ../woocommerce-variable-manager-0.7.0-beta.zip woocommerce-variable-manager
+          zip -qr ../woocommerce-variable-manager-0.8.0-beta.zip woocommerce-variable-manager
       - name: Upload staging installer
         uses: actions/upload-artifact@v4
         with:
-          name: woocommerce-variable-manager-0.7.0-beta-staging
-          path: woocommerce-variable-manager-0.7.0-beta.zip
+          name: woocommerce-variable-manager-0.8.0-beta-staging
+          path: woocommerce-variable-manager-0.8.0-beta.zip
           retention-days: 7
 
   ephemeral-woocommerce:
