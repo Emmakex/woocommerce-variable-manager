@@ -10,30 +10,56 @@ final class WVM_Catalog {
      * Name/title search with exact SKU lookup as a fast path.
      * Always keep the main listing inside WooCommerce product APIs.
      */
-    public static function search( string $term, int $page = 1 ) {
+    public const STATUSES = array(
+        'all'     => 'Todos los estados',
+        'publish' => 'Publicados',
+        'draft'   => 'Borradores',
+        'pending' => 'Pendientes',
+        'private' => 'Privados',
+    );
+
+    public static function allowed_status( string $status ): string {
+        return isset( self::STATUSES[ $status ] ) ? $status : 'all';
+    }
+
+    /**
+     * Paged title or exact SKU search with optional managed-only and status
+     * filters. Uses native WooCommerce product queries; no custom SQL.
+     *
+     * @param array $filters ['managed' => bool, 'status' => valid status, 'per_page' => int].
+     */
+    public static function search( string $term, int $page = 1, array $filters = array() ) {
         $page = max( 1, $page );
+        $status = self::allowed_status( (string) ( $filters['status'] ?? 'all' ) );
+        $allowed_statuses = array( 'publish', 'draft', 'pending', 'private' );
+        $statuses = 'all' === $status ? $allowed_statuses : array( $status );
+        $managed = ! empty( $filters['managed'] );
+        $limit = min( 20, max( 1, (int) ( $filters['per_page'] ?? 20 ) ) );
         $args = array(
             'type'     => 'simple',
-            'limit'    => 20,
+            'limit'    => $limit,
             'paginate' => true,
             'page'     => $page,
-            'status'   => array( 'publish', 'draft', 'pending', 'private' ),
+            'status'   => $statuses,
             'orderby'  => 'date',
             'order'    => 'DESC',
         );
+        if ( $managed ) {
+            $args['wvm_managed'] = true;
+        }
         $term = trim( $term );
         if ( '' !== $term ) {
             $sku_id = wc_get_product_id_by_sku( $term );
             $sku_product = $sku_id ? wc_get_product( $sku_id ) : null;
             if ( $sku_product instanceof WC_Product_Simple &&
-                 in_array( $sku_product->get_status(), $args['status'], true ) ) {
+                 in_array( $sku_product->get_status(), $statuses, true ) &&
+                 ( ! $managed || WVM_Products::is_managed( $sku_product ) ) ) {
                 return (object) array(
                     'products'      => 1 === $page ? array( $sku_product ) : array(),
                     'total'         => 1,
                     'max_num_pages' => 1,
                 );
             }
-            // WooCommerce handles partial name/title matching here.
             $args['search'] = $term;
         }
         return wc_get_products( $args );
