@@ -103,6 +103,7 @@ final class WVM_Dashboard {
             'quick_saved'           => array( 'success', 'Tarifas actualizadas. Se han conservado suplementos, reglas e inventario.' ),
             'quick_unchanged'       => array( 'success', 'No hay cambios de precio que guardar.' ),
             'quick_error'           => array( 'error', 'No se han actualizado las tarifas. Comprueba los importes y recarga la página si otro administrador ha realizado cambios.' ),
+            'sale_protected'        => array( 'error', 'Este producto tiene una oferta de WooCommerce. Retira o finaliza el precio de oferta antes de guardar sus tarifas en Variable Manager.' ),
             'duplicate_failed'      => array( 'error', 'No se pudo duplicar este producto. Comprueba que su configuración siga siendo válida.' ),
             'invalid_template'      => array( 'error', 'Introduce un nombre y al menos una medida válida.' ),
             'template_sizes_in_use' => array( 'error', 'Una plantilla asignada a productos no puede cambiar sus opciones. Duplica la plantilla y configura los nuevos precios para evitar errores.' ),
@@ -416,6 +417,9 @@ final class WVM_Dashboard {
         $existing = $id ? wc_get_product( $id ) : null;
         if ( $id && ( ! $existing instanceof WC_Product_Simple || ! current_user_can( 'edit_post', $id ) ) ) {
             wp_die( 'Solo se pueden editar productos simples con permiso.' );
+        }
+        if ( $existing && '' !== $existing->get_sale_price( 'edit' ) ) {
+            self::redirect( 'wvm-products', 'sale_protected', $id );
         }
         $name = isset( $_POST['wvm_product_name'] ) && is_string( $_POST['wvm_product_name'] )
             ? sanitize_text_field( wp_unslash( $_POST['wvm_product_name'] ) ) : '';
