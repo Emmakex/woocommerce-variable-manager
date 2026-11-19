@@ -97,5 +97,14 @@ jobs:
           wp eval-file "$GITHUB_WORKSPACE/tests/woocommerce-integration.php" --path="$WP_PATH"
           wp wvm demo preview --path="$WP_PATH"
           wp wvm demo seed --confirm-synthetic=YES --path="$WP_PATH"
+          WVM_EXPECT_DEMO=8 wp eval-file "$GITHUB_WORKSPACE/tests/demo-audit.php" --path="$WP_PATH"
           wp wvm demo seed --confirm-synthetic=YES --path="$WP_PATH"
+          WVM_EXPECT_DEMO=8 wp eval-file "$GITHUB_WORKSPACE/tests/demo-audit.php" --path="$WP_PATH"
           wp wvm demo purge --confirm-synthetic=YES --path="$WP_PATH"
+          WVM_EXPECT_DEMO=0 wp eval-file "$GITHUB_WORKSPACE/tests/demo-audit.php" --path="$WP_PATH"
+          wp config set WP_ENVIRONMENT_TYPE production --type=constant --path="$WP_PATH"
+          if wp wvm demo seed --confirm-synthetic=YES --path="$WP_PATH"; then
+            echo "ERROR: production synthetic seed must be refused"
+            exit 1
+          fi
+          echo "Production seed guard PASS"
