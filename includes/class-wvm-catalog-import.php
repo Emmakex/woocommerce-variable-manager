@@ -106,8 +106,10 @@ final class WVM_Catalog_Import {
                 if ( ! $options['size'] ) {
                     return self::error( 'Fila ' . $line . ': añade al menos una medida.' );
                 }
-                $prices = self::options( $row['precios'] );
-                if ( null === $prices || count( $prices ) !== count( $options['size'] ) ) {
+                // Different measures may legitimately share the same price.
+                // Do not run the distinct-options validator on amounts.
+                $prices = array_map( 'trim', explode( '|', $row['precios'] ) );
+                if ( in_array( '', $prices, true ) || count( $prices ) !== count( $options['size'] ) ) {
                     return self::error( 'Fila ' . $line . ': el número de precios debe coincidir con las medidas.' );
                 }
                 $matrix = WVM_Pricing::validate_matrix( $options['size'], $options['size'], $prices );
