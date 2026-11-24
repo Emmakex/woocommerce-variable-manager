@@ -1,4 +1,4 @@
-# Staging plan — colchones.kairoseth.com
+# Staging plan — colchones.emmake.com
 
 This document is an installation and acceptance checklist, **not a deployment record**.
 DNS/subdomain creation and WordPress installation are performed on the staging host
@@ -6,7 +6,7 @@ by the infrastructure owner. Do not deploy this beta to production.
 
 ## Recommended environment
 
-- Host: `colchones.kairoseth.com` (the owner is creating the subdomain).
+- Host: `colchones.emmake.com` (the owner is creating the subdomain).
 - Dedicated staging WordPress install + its **own database**, not the production database.
 - PHP >= 8.1 (prefer an actively supported 8.2+ branch), HTTPS and a supported WooCommerce release.
 - Protect the staging site behind basic authentication or equivalent access restriction;
