@@ -7,3 +7,28 @@
 .wvm-configurator .wvm-warning:not([hidden]) { color: #9c2020; border-left: 3px solid #b42318; padding: 8px 12px; margin: 0; }
 .wvm-configurator .wvm-warning[hidden] { display: none; }
 .wvm-configurator .wvm-note { font-size: .85rem; opacity: .75; margin: 0; }
+
+/* Show product options even when WooCommerce suppresses add-to-cart for stockless drafts. */
+.wvm-configurator-preview {
+  padding: 18px;
+  border: 1px solid #dcdcde;
+  border-radius: 8px;
+  background: #fafafa;
+  max-width: 540px;
+}
+.wvm-configurator-preview .wvm-preview-notice {
+  margin: 0 0 4px;
+  padding: 10px 12px;
+  border-left: 3px solid #2271b1;
+  background: #f0f6fc;
+  color: #1d2327;
+  line-height: 1.5;
+}
+.wvm-configurator-preview .wvm-field select:focus-visible {
+  outline: 2px solid #2271b1;
+  outline-offset: 2px;
+}
+@media (max-width: 600px) {
+  .wvm-configurator-preview { padding: 12px; width: 100%; box-sizing: border-box; }
+  .wvm-configurator-preview select { max-width: 100%; }
+}
