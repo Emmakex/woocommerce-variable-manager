@@ -46,7 +46,7 @@ node --check assets/storefront.js
 
 GitHub Actions also installs WordPress, WooCommerce and a MySQL service **inside an ephemeral job** and runs [tests/woocommerce-integration.php](tests/woocommerce-integration.php) to exercise real CRUD, stored templates, price rules, cart data/order metadata and fail-closed checks. A separate [WooCommerce bulk integration test](tests/woocommerce-bulk-integration.php) checks two-product CSV imports, selective price changes, rule/stock preservation, conflict detection, sale protection and export roundtrip. [Catalog integration tests](tests/woocommerce-catalog-integration.php) cover exact SKU search and safe draft duplication of managed products. [Quick-editor integration tests](tests/woocommerce-quick-integration.php) verify multi-product edits (including products with no SKU), preservation of surcharges and stock, stale form rejection, invalid prices and sale protection. The seeded demo catalog is audited, seeded twice to check idempotence and then purged. A final check confirms that **demo seeding is refused when WP_ENVIRONMENT_TYPE=production**.
 
-The test environment is destroyed after the run. It does not need `colchones.kairoseth.com` and cannot change a real shop.
+The test environment is destroyed after the run. It does not need `colchones.emmake.com` and cannot change a real shop.
 
 ### Synthetic catalog inside a future nonproduction WordPress install
 
@@ -66,7 +66,7 @@ No demo products are ever created on plugin activation, by the admin dashboard o
 
 Requires PHP 8.1+, WordPress and active WooCommerce. Download the `woocommerce-variable-manager-0.9.0-beta-staging` artifact from the successful GitHub Actions workflow. Extract the plugin ZIP and upload it from WordPress → Plugins.
 
-Open **Variable Manager** in the WP admin sidebar. The shop's theme must render classic WooCommerce product hooks; checkout blocks / Store API are **not yet certified**. For `colchones.kairoseth.com` setup and acceptance checks, see [docs/STAGING.md](docs/STAGING.md).
+Open **Variable Manager** in the WP admin sidebar. The shop's theme must render classic WooCommerce product hooks; checkout blocks / Store API are **not yet certified**. For `colchones.emmake.com` setup and acceptance checks, see [docs/STAGING.md](docs/STAGING.md).
 
 ## Code structure
 
