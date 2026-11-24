@@ -42,12 +42,12 @@ jobs:
           mkdir -p dist/woocommerce-variable-manager/tests
           cp -R tests/fixtures dist/woocommerce-variable-manager/tests/
           cd dist
-          zip -qr ../woocommerce-variable-manager-0.10.0-beta.zip woocommerce-variable-manager
+          zip -qr ../woocommerce-variable-manager-0.10.1-beta.zip woocommerce-variable-manager
       - name: Upload staging installer
         uses: actions/upload-artifact@v4
         with:
-          name: woocommerce-variable-manager-0.10.0-beta-staging
-          path: woocommerce-variable-manager-0.10.0-beta.zip
+          name: woocommerce-variable-manager-0.10.1-beta-staging
+          path: woocommerce-variable-manager-0.10.1-beta.zip
           retention-days: 7
 
   ephemeral-woocommerce:
