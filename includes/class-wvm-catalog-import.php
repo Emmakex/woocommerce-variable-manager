@@ -356,7 +356,7 @@ final class WVM_Catalog_Import {
         echo '<p><label for="wvm_catalog_csv"><strong>CSV de creación (11 columnas, hasta 80 productos)</strong></label>';
         echo '<input type="file" id="wvm_catalog_csv" name="wvm_catalog_csv" accept=".csv,text/csv,text/plain" required></p>';
         echo '<p class="description">Campos: sku;nombre;familia;descripcion;medidas;precios;colores;alturas;aperturas;suplementos;incompatibilidades. Las listas se separan con |.</p>';
-        submit_button( 'Previsualizar 30 productos sin crear', 'secondary', 'submit', false );
+        submit_button( 'Previsualizar productos sin crear', 'secondary', 'submit', false );
         echo '</form>';
         $token = self::token();
         $plan = self::preview_data( $token );
@@ -372,7 +372,7 @@ final class WVM_Catalog_Import {
                 echo '<tr><td>' . esc_html( $row['sku'] ) . '</td><td>' . esc_html( $row['name'] ) . '</td><td>' .
                     esc_html( $row['family'] ) . '</td><td>' . esc_html( (string) count( $row['matrix'] ) ) . '</td></tr>';
             }
-            echo '</tbody></table></div><p>Las 30 fichas quedarán ocultas y fuera de stock. Deberás revisarlas individualmente antes de publicar nada.</p>';
+            echo '</tbody></table></div><p>Todas las fichas quedarán ocultas y fuera de stock. Deberás revisarlas individualmente antes de publicar nada.</p>';
             echo '<form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '">';
             echo '<input type="hidden" name="action" value="wvm_catalog_apply">';
             echo '<input type="hidden" name="wvm_catalog_token" value="' . esc_attr( $token ) . '">';
