@@ -19,7 +19,7 @@ by the infrastructure owner. Do not deploy this beta to production.
 
 ## Install/test from GitHub
 
-1. Download the `woocommerce-variable-manager-0.10.0-beta-staging` artifact from the
+1. Download the `woocommerce-variable-manager-0.10.1-beta-staging` artifact from the
    latest successful PR workflow and extract its inner ZIP.
 2. In staging WP: Plugins > Add Plugin > Upload the plugin ZIP.
 3. Enable WooCommerce, then Variable Manager. Leave the commercial theme and
@@ -91,9 +91,17 @@ owner verification; never store credentials in GitHub source files.
 
 ### Import a synthetic catalog of 30 new products
 
-1. Update the installed plugin to `woocommerce-variable-manager-0.10.0-beta.zip` (Plugins → Add Plugin → Upload, then Replace Current). Keep WooCommerce active.
+1. Update the installed plugin to `woocommerce-variable-manager-0.10.1-beta.zip` (Plugins → Add Plugin → Upload, then Replace Current). Keep WooCommerce active.
 2. From the existing dashboard open **Variable Manager → Importar / exportar**. Scroll to **Crear productos nuevos desde CSV (pruebas)**. Do **not** use the other CSV tariff-update form; it only works on existing SKUs.
 3. Upload `catalogo_30_productos_variable_manager.csv` (separate CSV supplied for testing), click **Previsualizar 30 productos sin crear**.
 4. Review all SKU/name/size counts. Then press **Crear los productos como borradores** once. On success verify 30 newly created products in **Variable Manager → Productos y tarifas**.
 5. All products must be `draft`, `hidden`, `outofstock`; no one can purchase them. Check a mattress's height supplements, a canapé's color/opening supplements and the 90x190+lateral incompatibility.
 6. Uploading the CSV again should refuse existing SKUs and never overwrite existing products. Tests do not create live stock or publish products. Do not change their status to published until a separate visual/checkout review.
+
+### Preview configurations before publishing (0.10.1)
+
+- [ ] While a created CSV product is a hidden draft and `outofstock`, open the admin's product preview. Verify **Medida, Color, Espesor / altura, Apertura** are shown whenever that template defines them.
+- [ ] Choose compatible values and observe the price preview update; choose a forbidden size/opening pair and see the incompatibility warning.
+- [ ] Verify there is no add-to-cart button for an unavailable draft. Never publish a synthetic product merely to see its options.
+- [ ] On a disposable in-stock, published product, the configurator appears only once **inside** the WooCommerce add-to-cart form and submitted selections still reach cart and order.
+- [ ] If using a theme based solely on WooCommerce Product Blocks, verify hook support separately.
