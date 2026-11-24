@@ -18,6 +18,10 @@ final class WVM_Storefront {
         add_filter( 'woocommerce_get_price_html', array( __CLASS__, 'price_html' ), 10, 2 );
         add_filter( 'woocommerce_loop_add_to_cart_link', array( __CLASS__, 'catalog_link' ), 10, 2 );
         add_action( 'woocommerce_before_add_to_cart_button', array( __CLASS__, 'render' ) );
+        // WooCommerce does not render the add-to-cart form for unavailable products.
+        // Show a read-only *purchase* preview separately so drafts and out-of-stock
+        // demo catalog items still display dimensions, colors and prices.
+        add_action( 'woocommerce_single_product_summary', array( __CLASS__, 'render_unavailable' ), 25 );
         add_action( 'wp_enqueue_scripts', array( __CLASS__, 'assets' ) );
         add_filter( 'woocommerce_add_to_cart_validation', array( __CLASS__, 'validate_add' ), 10, 3 );
         add_filter( 'woocommerce_add_cart_item_data', array( __CLASS__, 'cart_data' ), 10, 3 );
@@ -80,7 +84,28 @@ final class WVM_Storefront {
         wp_enqueue_style( 'wvm-storefront', WVM_URL . 'assets/storefront.css', array(), WVM_VERSION );
     }
 
+    /** Configurator inside WooCommerce's real cart form, preserving POST fields. */
     public static function render(): void {
+        self::render_configurator( false );
+    }
+
+    /**
+     * The standard form is absent for drafts or unavailable stock. Give store
+     * managers a usable configurator preview without adding a purchase form.
+     * This hook is independent of WooCommerce's purchasable/stock gate.
+     */
+    public static function render_unavailable(): void {
+        global $product;
+        if ( ! $product instanceof WC_Product || ! WVM_Products::is_managed( $product ) ) {
+            return;
+        }
+        if ( $product->is_purchasable() && $product->is_in_stock() ) {
+            return; // The normal cart form renders the configurator once.
+        }
+        self::render_configurator( true );
+    }
+
+    private static function render_configurator( bool $preview ): void {
         global $product;
         if ( ! $product instanceof WC_Product || ! WVM_Products::is_managed( $product ) ) {
             return;
@@ -97,14 +122,20 @@ final class WVM_Storefront {
             'currency'   => get_woocommerce_currency(),
         ) );
 
-        echo '<div class="wvm-configurator" data-wvm-config="' . esc_attr( $json ) . '">';
+        echo '<div class="wvm-configurator' . ( $preview ? ' wvm-configurator-preview' : '' ) .
+            '" data-wvm-config="' . esc_attr( $json ) . '">';
+        if ( $preview ) {
+            echo '<p class="wvm-preview-notice" role="status"><strong>Vista previa de opciones.</strong> ' .
+                'Puedes comprobar medidas, acabados y precios, pero este producto no está disponible para comprar.</p>';
+        }
         foreach ( self::FIELDS as $key => $label ) {
             $values = $config['options'][ $key ] ?? array();
             if ( ! $values ) {
                 continue;
             }
             echo '<p class="wvm-field"><label for="wvm_' . esc_attr( $key ) . '">' . esc_html( $label ) . '</label>';
-            echo '<select id="wvm_' . esc_attr( $key ) . '" name="wvm_' . esc_attr( $key ) . '" required>';
+            echo '<select id="wvm_' . esc_attr( $key ) . '" name="wvm_' . esc_attr( $key ) . '"' .
+                ( $preview ? '' : ' required' ) . '>';
             echo '<option value="">Seleccionar ' . esc_html( strtolower( $label ) ) . '</option>';
             foreach ( $values as $value ) {
                 echo '<option value="' . esc_attr( $value ) . '">' . esc_html( $value ) . '</option>';
@@ -113,7 +144,9 @@ final class WVM_Storefront {
         }
         echo '<p class="wvm-selected-price" data-wvm-selected-price aria-live="polite">Selecciona una medida para ver su precio</p>';
         echo '<p class="wvm-warning" data-wvm-warning role="alert" hidden></p>';
-        echo '<p class="wvm-note">El importe definitivo se confirma en el carrito según los impuestos de la tienda.</p>';
+        echo '<p class="wvm-note">' . ( $preview
+            ? 'Precio orientativo de la configuración. Producto no disponible para compra.'
+            : 'El importe definitivo se confirma en el carrito según los impuestos de la tienda.' ) . '</p>';
         echo '</div>';
     }
 
