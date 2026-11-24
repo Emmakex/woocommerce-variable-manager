@@ -101,6 +101,49 @@ try {
     ), 'canape forbidden opening not preserved' );
     catalog_csv_assert( abs( (float) $config['surcharges']['color']['Roble'] - 35.0 ) < 0.001, 'color surcharge missing' );
 
+    // WooCommerce normally hides the whole add-to-cart form for out-of-stock
+    // draft products. Options should still appear in a separate preview.
+    catalog_csv_assert(
+        false !== has_action( 'woocommerce_single_product_summary', array( 'WVM_Storefront', 'render_unavailable' ) ),
+        'independent product summary preview hook is not registered'
+    );
+    $original_global_product = $GLOBALS['product'] ?? null;
+    try {
+        $GLOBALS['product'] = $canape;
+        ob_start();
+        WVM_Storefront::render_unavailable();
+        $preview_markup = ob_get_clean();
+        catalog_csv_assert( str_contains( $preview_markup, 'wvm-configurator-preview' ), 'unavailable draft has no preview' );
+        catalog_csv_assert( str_contains( $preview_markup, 'name="wvm_size"' ), 'draft missing measurement select' );
+        catalog_csv_assert( str_contains( $preview_markup, 'name="wvm_color"' ), 'draft missing color select' );
+        catalog_csv_assert( str_contains( $preview_markup, 'name="wvm_opening"' ), 'draft missing opening select' );
+        catalog_csv_assert( str_contains( $preview_markup, 'data-wvm-config=' ), 'draft missing client-side pricing configuration' );
+        catalog_csv_assert( ! str_contains( $preview_markup, '<form' ), 'preview must not invent an add-to-cart form' );
+        catalog_csv_assert( ! str_contains( $preview_markup, 'single_add_to_cart_button' ), 'preview must not include purchasing button' );
+
+        // A saleable product should only render inside the actual WC form,
+        // preserving POST fields for cart and checkout; no duplicate UI.
+        $canape->set_status( 'publish' );
+        $canape->set_stock_status( 'instock' );
+        $canape->save();
+        $GLOBALS['product'] = wc_get_product( $canape->get_id() );
+        ob_start();
+        WVM_Storefront::render_unavailable();
+        $unexpected_preview = ob_get_clean();
+        catalog_csv_assert( '' === $unexpected_preview, 'purchasable product incorrectly duplicates configurator' );
+        ob_start();
+        WVM_Storefront::render();
+        $normal_form_markup = ob_get_clean();
+        catalog_csv_assert( str_contains( $normal_form_markup, 'name="wvm_size"' ), 'saleable product is missing form options' );
+        catalog_csv_assert( ! str_contains( $normal_form_markup, 'wvm-configurator-preview' ), 'saleable product uses the preview markup' );
+        $canape->set_status( 'draft' );
+        $canape->set_stock_status( 'outofstock' );
+        $canape->save();
+    } finally {
+        $GLOBALS['product'] = $original_global_product;
+    }
+
+
     catalog_csv_assert( is_wp_error( WVM_Catalog_Import::plan( $rows ) ), 'second import failed to detect existing SKU' );
     catalog_csv_assert( is_wp_error( WVM_Catalog_Import::apply( $plan ) ), 'second import modified existing products' );
 
