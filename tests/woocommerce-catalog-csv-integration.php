@@ -81,7 +81,12 @@ try {
         catalog_csv_assert( 'hidden' === $product->get_catalog_visibility(), 'imported product visible in catalog' );
         catalog_csv_assert( 'outofstock' === $product->get_stock_status(), 'imported product has purchasable stock' );
         catalog_csv_assert( false === $product->get_manage_stock(), 'imported product manages real inventory' );
-        catalog_csv_assert( ! $product->is_purchasable(), 'imported draft is purchasable' );
+        // WooCommerce may expose draft preview as purchasable to admins with
+        // edit_post, so check public visitor permissions, not admin preview.
+        wp_set_current_user( 0 );
+        $visitor_product = wc_get_product( $id );
+        catalog_csv_assert( ! $visitor_product->is_purchasable(), 'anonymous visitor can purchase draft' );
+        wp_set_current_user( 1 );
         $config = WVM_Products::configuration( $product );
         catalog_csv_assert( is_array( $config ) && 4 === count( $config['prices'] ), 'imported price matrix invalid' );
         $all_templates[ $config['template_id'] ] = true;
@@ -114,6 +119,7 @@ try {
 
     echo "WooCommerce CSV create PASS: 30 draft hidden products, 120 prices, template reuse, options/surcharges, duplicate guard, invalid rows and no shop stock.\n";
 } finally {
+    wp_set_current_user( 1 );
     foreach ( $skus as $sku ) {
         $id = wc_get_product_id_by_sku( $sku );
         if ( $id ) {
