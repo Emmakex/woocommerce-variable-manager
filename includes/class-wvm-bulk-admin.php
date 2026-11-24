@@ -123,6 +123,7 @@ final class WVM_Bulk_Admin {
             submit_button( 'Confirmar y guardar tarifas', 'primary', 'submit', false );
             echo ' <a class="button button-secondary" href="' . esc_url( self::page_url() ) . '">Cancelar</a></form></div>';
         }
+        WVM_Catalog_Import::render();
         echo '</div>';
     }
 
